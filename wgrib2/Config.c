@@ -66,7 +66,7 @@ int f_config(ARG0) {
 #endif
 
 #ifdef USE_IPOLATES
-    strcat(inv_out, "interpolation package is installed, default vectors:\n    ");
+    strcat(inv_out, "IPOLATES " IPOLATES_LIB " is installed, default vectors:\n    ");
     i = 0;
     while (default_vectors[i] != NULL) {
 	if ( (i % 15 == 14)) strcat(inv_out, "\n    ");
@@ -141,12 +141,17 @@ strcat(inv_out, "  spherical geolocation is enabled\n");
     strcat(inv_out, "g2clib decoders are not installed\n");
 #endif
 
-#ifndef USE_PNG
-    strcat(inv_out, "png compression not supported\n");
+    strcat(inv_out,"Supported decoding: simple, complex, rle, ieee");
+#ifdef USE_PNG
+    strcat(inv_out, ", png");
 #endif
-#ifndef USE_JASPER
-    strcat(inv_out, "jpeg2000 compression not supported\n");
+#ifdef USE_JASPER
+    strcat(inv_out, ", jpeg2000");
 #endif
+#ifdef USE_AEC
+    strcat(inv_out, ", CCSDS AEC");
+#endif
+    strcat(inv_out, "\n");
 
     filename = getenv("GRIB2TABLE");
     if (filename == NULL) filename = getenv("grib2table");

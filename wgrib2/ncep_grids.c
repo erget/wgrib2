@@ -127,6 +127,12 @@ void ncep_grids(const char **arg1, const char **arg2, const char **arg3) {
 		*arg3 = "89.95833333333:2160:-0.083333333333";
 		break;
 
+	    case 194:
+		*arg1 = "mercator:20";
+		*arg2 = "284.5:544:2500:297.491";
+		*arg3 = "15:310:2500:22.005";
+		break;
+
 	    case 221:
 		*arg1="lambert:253:50";
 		*arg2="214.5:349:32463.41";

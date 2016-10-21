@@ -36,13 +36,17 @@ extern int use_proj4;
 #define M_PI_4         0.78539816339744830962  /* pi/4 */
 #endif
 
+
+extern double *lat, *lon;
+
 static double dx, dy, x_0, y_0, x00, xN;
 static unsigned int gdt;
 static int nx, ny;
+static unsigned int nx_, ny_;
 
 static projPJ pj_grid, pj_latlon;
 
-int proj4_init(unsigned char **sec) {
+int proj4_init(unsigned char **sec, double *grid_lon, double *grid_lat) {
 
     unsigned char *gds;
 
@@ -61,12 +65,14 @@ int proj4_init(unsigned char **sec) {
     unsigned int npnts;
     char proj4_def[1000];
 
+    if (grid_lat == NULL || grid_lon == NULL) return 1;
     gdt = code_table_3_1(sec);
     gds = sec[3];
     center = GB2_Center(sec);
 
     get_nxny(sec, &nx, &ny, &npnts, &nres, &nscan);
-    if (nx == -1 || ny == -1 || nx*ny != npnts)   return 1;
+    get_nxny_(sec, &nx_, &ny_, &npnts, &nres, &nscan);
+    if (nx_ < 1 || ny_ < 1 || nx_*ny_ != npnts)   return 1;
 
     /* only process certain grids */
     pj_grid = NULL;
@@ -75,20 +81,12 @@ int proj4_init(unsigned char **sec) {
     x_0 = y_0 = x00 = xN = 0.0;
 
     if (gdt == 0) {     /* lat-lon grid */
-
-        dx = GDS_LatLon_dlon(gds) * 0.000001;
-        dy = GDS_LatLon_dlat(gds) * 0.000001;
-	dx = fabs(dx);
-	dy = fabs(dy);
-        lon1 = GDS_LatLon_lon1(gds) * 0.000001;
-//        lon2 = GDS_LatLon_lon2(gds) * 0.000001;
-        lat1 = GDS_LatLon_lat1(gds) * 0.000001;
-//        lat2 = GDS_LatLon_lat2(gds) * 0.000001;
-        x_0 = lon1;
-	y_0 = lat1;
-
-        x00 = 1e20;
-        xN = 1e20;
+        dx = grid_lon[1] - grid_lon[0];
+        dy = grid_lat[nx] - grid_lat[0];
+        x_0 = grid_lon[0];
+        x00 = grid_lon[0] - 0.5*dx;
+        xN = grid_lon[nx-1] + 0.5*dx;
+        y_0 = grid_lat[0];
         return 0;
     }
     else if (gdt == 10 && (GDS_Mercator_ori_angle(gds) == 0.0) ) {            // mercator no rotation
@@ -282,26 +280,29 @@ int Proj4_ll2xy(int n, double *lon, double *lat, double *x, double *y) {
     return 0;
 }
 
-int Proj4_ll2i(int n, double *lon, double *lat, int *ipnt) {
-    int i, ix, iy, error;
-    double rlon, rlat, inv_dx, inv_dy; 
+int Proj4_ll2i(int n, double *lon, double *lat, unsigned int *ipnt) {
+    int error;
+    unsigned int i;
+    double rlon, rlat, inv_dx, inv_dy, x, y; 
 
     inv_dx = 1.0 / dx;
     inv_dy = 1.0 / dy;
     if (gdt == 0) {             // lat-lon
-#pragma omp parallel for schedule(static) private(i,rlon,rlat,ix,iy)
+#pragma omp parallel for schedule(static) private(i,rlon,rlat,x,y)
         for (i = 0; i < n; i++) {
             rlon = lon[i];
             if (rlon > xN) rlon -= 360.0;
             if (rlon < x00) rlon += 360.0;
             rlat = lat[i];
-            ix = floor((rlon - x_0) * inv_dx + 0.5);
-            iy = floor((rlat - y_0) * inv_dy + 0.5);
-            if (ix < 0 || ix >= nx || iy < 0 || iy >= ny) {
-                ipnt[i] = -1;
+	    
+            x = floor((rlon - x_0) * inv_dx + 0.5);
+            y = floor((rlat - y_0) * inv_dy + 0.5);
+
+            if (x < 0 || x >= nx || y < 0 || y >= ny) {
+                ipnt[i] = 0;
             }   
             else {
-                ipnt[i] = ix + nx*iy;
+                ipnt[i] = (unsigned int) x + nx* ((unsigned int) y) + 1;
             }
         }
         return 0;
@@ -315,16 +316,16 @@ int Proj4_ll2i(int n, double *lon, double *lat, int *ipnt) {
 
         if ( pj_transform(pj_latlon, pj_grid, 1, 1, &rlon, &rlat, NULL) != 0 ) error = 1;
 
-        ix = floor((rlon - x_0)*inv_dx + 0.5);
-        iy = floor((rlat - y_0)*inv_dy + 0.5);
-        if (ix < 0 || ix >= nx || iy < 0 || iy >= ny) {
-            ipnt[i] = -1;
-        }
+        x = floor((rlon - x_0)*inv_dx + 0.5);
+        y = floor((rlat - y_0)*inv_dy + 0.5);
+
+        if (x < 0 || x >= nx || y < 0 || y >= ny) {
+            ipnt[i] = 0;
+	}
         else {
-            ipnt[i] = ix + nx*iy;
+            ipnt[i] = (unsigned int) x + nx*(unsigned int) y + 1;
         }
     }
-
     return error;
 }
 
@@ -343,9 +344,10 @@ int f_proj4_ll2ij(ARG2) {
         if (output_order != wesn)  return 1;
         to_lon[0] = atof(arg1);
         to_lat[0] = atof(arg2);
-        i = proj4_init(sec);
+        i = proj4_init(sec, lon, lat);
         if (i == 0)  {
             i = Proj4_ll2xy(1, to_lon, to_lat, x , y);
+	    if (i) x[0] = y[0] = -1.0;
             sprintf(inv_out,"%lf %lf -> (%lf,%lf)",to_lon[0], to_lat[0], x[0]+1.0, y[0]+1.0);
         }
     }
@@ -375,12 +377,17 @@ int Proj4_ij2ll(unsigned char **sec, int n, double *x, double *y, double *lon, d
 /* test */
         xx = dx*(x[i] -1.0) + x_0;
         yy = dy*(y[i] -1.0) + y_0;
-        if ( pj_transform(pj_grid, pj_latlon, 1, 1, &xx, &yy, NULL) != 0 ) error = 1;
-        lon[i] = xx * RAD_TO_DEG;
-        lat[i] = yy * RAD_TO_DEG;
-        if (lon[i] < 0.0) lon[i] += 360.0;
+        if ( pj_transform(pj_grid, pj_latlon, 1, 1, &xx, &yy, NULL) != 0 ) {
+	    error = 1;
+            lon[i] = 999.0;
+            lat[i] = 999.0;
+	}
+	else {
+            lon[i] = xx * RAD_TO_DEG;
+            lat[i] = yy * RAD_TO_DEG;
+            if (lon[i] < 0.0) lon[i] += 360.0;
+	}
     }
-
     return error;
 
 }
@@ -420,10 +427,13 @@ int f_proj4_ij2ll(ARG2) {
     int i;
     double x, y, rlon, rlat;
 
-    if (mode >= 0) {
+    if (mode == -1) {
+	latlon = 1;
+    }
+    else if (mode >= 0) {
 	x = atof(arg1);
 	y = atof(arg2);
-        i = proj4_init(sec);
+        i = proj4_init(sec, lon, lat);
         if (i == 0)  {
 	    i = Proj4_ij2ll(sec, 1, &x, &y, &rlon, &rlat);
 	    if (i == 0) {
@@ -438,12 +448,13 @@ int f_proj4_ij2ll(ARG2) {
 
 
 /*
- * HEADER:100:proj4_ll2i:inv:2:x=lon y=lat, converts to (i) using proj.4  (experimental)
+ * HEADER:100:proj4_ll2i:inv:2:x=lon y=lat, converts to (i) using proj.4  (experimental) 1..ndata
  */
 int f_proj4_ll2i(ARG2) {
 
     double to_lat[1], to_lon[1];
-    int i, iptr;
+    int i;
+    unsigned int iptr;
 
     if (mode == -1) {
         latlon = 1;
@@ -452,11 +463,13 @@ int f_proj4_ll2i(ARG2) {
         if (output_order != wesn) return 1;
         to_lon[0] = atof(arg1);
         to_lat[0] = atof(arg2);
-        i = proj4_init(sec);
-        if (i == 0)  {
+        i = proj4_init(sec, lon, lat);
+	if (i) iptr = 0;
+	else {
             i = Proj4_ll2i(1, to_lon, to_lat, &iptr);
-            sprintf(inv_out,"%lf %lf -> (%d)",to_lon[0], to_lat[0], iptr);
+	    if (i) iptr = 0;
         }
+        sprintf(inv_out,"%lf %lf -> (%u)",to_lon[0], to_lat[0], iptr);
     }
     return 0;
 }
@@ -476,14 +489,14 @@ int proj4_get_latlon(unsigned char **sec, double **lon, double **lat) {
     unsigned int i, nnpnts;
     double *llat, *llon;
 
-    if (proj4_init(sec) != 0) return 1;
+    llat = *lat;
+    llon = *lon;
+
+    if (proj4_init(sec, llon, llat) != 0) return 1;
 
     get_nxny(sec, &nnx, &nny, &nnpnts, &nres, &nscan);
 
     /* potentially staggered */
-
-    llat = *lat;
-    llon = *lon;
 
     if (llat != NULL) {
         free(llat);

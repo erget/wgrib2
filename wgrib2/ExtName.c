@@ -99,14 +99,22 @@ int f_misc(ARG0) {
 	strcat(inv_out,"climatological");
 	need_space = 1;
     }
-
-
     else if (GB2_Center(sec) == 7 && val == 192) {
 	if (need_space) strcat(inv_out,":");
 	strcat(inv_out,"Confidence Indicator");
 	need_space = 1;
     }
-
+    else if (GB2_Center(sec) == 7 && val == 194) {
+	if (need_space) strcat(inv_out,":");
+	strcat(inv_out,"Neighborhood Probability");
+	need_space = 1;
+    }
+    else if (val >= 192 && val != 255) {
+	if (need_space) strcat(inv_out,":");
+	inv_out += strlen(inv_out);
+	sprintf(inv_out,"process=%d", val);
+	need_space = 1;
+    }
 
     if (pdt == 7) {
 	if (need_space) strcat(inv_out,":");
@@ -115,10 +123,17 @@ int f_misc(ARG0) {
     }
     else if (pdt == 6 || pdt == 10) {
 	if (need_space) strcat(inv_out,":");
+	inv_out += strlen(inv_out);
         f_percent(call_ARG0(inv_out,NULL) );
 	strcat(inv_out," level");
 	need_space = 1;
-   }
+    }
+    else if (pdt >= 31 && pdt <= 34) {
+	if (need_space) strcat(inv_out,":");
+	inv_out += strlen(inv_out);
+        f_spectral_bands_extname(call_ARG0(inv_out,local));
+	need_space = 1;
+    }
 
    if ( (val = code_table_4_230(sec)) != -1) {
 	if (need_space) strcat(inv_out,":");

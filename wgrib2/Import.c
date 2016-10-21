@@ -42,15 +42,15 @@ int f_import_text(ARG1) {
                 fatal_error("import_text: Could not read nx, ny in file %s", arg1);
             }
 	    if (nx_ != ix) {
-                fatal_error_i("import_text: nx=%u is wrong",ix);
+                fatal_error_u("import_text: nx=%u is wrong",ix);
 	    }
 	    if (ny_ != iy) {
-                fatal_error_i("import_text: ny=%u is wrong",iy);
+                fatal_error_u("import_text: ny=%u is wrong",iy);
 	    }
 	}
 	for (i = 0; i < ndata; i++) {
 	    if (fscanf((FILE *) *local, "%f", &t) != 1)
-                fatal_error_i("import_text: Could not read data. location=%u",i+1);
+                fatal_error_u("import_text: Could not read data. location=%u",i+1);
 	    data[i] = t;
         }
         use_scale = 0;
@@ -123,12 +123,12 @@ int f_import_bin(ARG1) {
 	    }
         }
         j = fread_file(data, sizeof(float), ndata, save);
-        if (j != ndata) fatal_error_ii("import_bin: read error read %u words, expected %u", j, ndata);
+        if (j != ndata) fatal_error_uu("import_bin: read error read %u words, expected %u", j, ndata);
         if (header) {
             if (fread_file((void *) &i, sizeof(int), 1, save) != 1)
                 fatal_error("import_bin: read error trailer","");
             if (i != sizeof(float) * ndata)
-                fatal_error_i("import_bin: trailer record size wrong, %u", i);
+                fatal_error_u("import_bin: trailer record size wrong, %u", i);
         }
         use_scale = 0;                  // new field, unknown scaling
     }

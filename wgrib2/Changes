@@ -299,9 +299,9 @@ v0.1.7.7i   12/2008 ----------------------------------------
 			WMO standard: data(*) = reference_value*10**(-dec_scaling)
 
 		For jpeg/png/simple/complex packing (not spectral), you can get
-			NCEP routines (1/09) by -gclib 1
-			WMO standard by -gclib 0
-		    The default value of gclib will depend on the installation
+			NCEP routines (1/09) by -g2clib 1
+			WMO standard by -g2clib 0
+		    The default value of g2clib will depend on the installation
 
 		Modified grib_out so that dec_scale is set to zero for constant fields
 		  as a result, the constant fields are NCEP-library compatible 
@@ -643,7 +643,7 @@ v0.1.9.1  11/2010 --------- unplanned early release
 		makefile works with new cygwin 1.7.7-1
 		changed error messages -ave, -NCEP_norm
 		changed error message  "Warning: g2lib/g2clib jpeg deocde may differ from 
-                    WMO standard, use use-g2clib 0 for WMO standardg2"  removed g2
+                    WMO standard, use -g2clib 0 for WMO standard
 		updated gribtab.dat from NCO website
 		changed set_date to new syntax: -set_date INITIAL_DATE:DT:BLOCKSIZE
 			DT > 0   BLOCKSIZE > 0, compatible to old syntax
@@ -689,7 +689,7 @@ v0.1.9.2c  3/2011 ------------------------------------------------
                      parameter category and number
 		prt_stat_tr: if Code Table 4.11 = reserved, ":reserved:" -> "CodeTable 4.11=reserved"
 		prt_stat_tr: if Code Table 4.11 = missing, ":missing:" -> "CodeTable 4.11=missing"
-		wgrib2.c do not print warning about g2lib bug when reference value == 0.0
+		wgrib2.c do not print warning about g2clib/g2lib bug when reference value == 0.0
 		added -n to f_match_inv().
 		support for silly ncep grid 32768/32769 non-E grid.
 		version 1 that was sent to eumetsat-data testers
@@ -1283,7 +1283,7 @@ v0.2.0.3  11/2015 -----------------------------------
 		-set_metadata and -set_metadata_str will scan 3 more free format fields 5 -> 8
 		new_grid: had to add sec1 in order to run mk_kgds. With locally defined grids,
 		   sec3 routines now have to look at the center.
-		unpk_complex() some 2G+ modifications, test for more failed malloocs
+		unpk_complex() some 2G+ modifications, test for more failed mallocs
 		added BOM local grib table definitions, prelim (I made it up) grib variable names
 		Scan.c: 2G+, speed-up, undef nx, ny = 0 or -1
 		translation[] from int -> unsigned int: ave(), -ave, -fcst_ave, Scan.c
@@ -1305,9 +1305,9 @@ v0.2.0.3  11/2015 -----------------------------------
 		support for pdt=4.32, 4.33, 4.34
 		space_view_closest: return long int, error if iy >= nny (before: iy > nny), 2G
 		closest(), latlon_closest(), space_view_closest(): from int to long int
-		bug fix: Steve Sullivan (mathcom.com). Found a bug in complex packing (complex_grib_out) 
-		    and provided a bug fix.  Complex packing divides the string of grid points into
-		    groups.  The minimum grid point value within the group is the group reference
+		bug fix: Many thanks to Steve Sullivan (mathcom.com) who found a bug in complex packing 
+		    (complex_grib_out) and provided a bug fix.  Complex packing divides the string of grid 
+		    points into groups.  The minimum grid point value within the group is the group reference
 		    value.  In order to pack the group references, you need to find the maximum
 		    group reference value (grefmx).  The loop that finds the grefmx bypasses the reference 
 		    value of the 1st group.  This is a problem when the reference value of the 1st group is 
@@ -1315,3 +1315,71 @@ v0.2.0.3  11/2015 -----------------------------------
 		    larger than number of bits required to encode the second largest reference value.  
 		    This bug is for versions 2.0.0 - 2.0.3.  This bug is more likely to occur when the grid 
 		    is small.  
+v0.2.0.4  2/2016 -----------------------------------
+		updated to libpng.1.2.56
+		f_match_inv: old match inv depended on verbosity, new: match_inv is fixed
+		-proj4_ll2i: works for lat-lon grids, always writes to inv
+		updated ExtName.c adds new NCEP defn, and adds process=X for val >= 192
+		-lli2: 0 == out of domain, always write to inv
+		-ave: support pdt = 2 and 12
+		wrtieee(): initialize i
+		added -set_date +10hr, set_date -12mo,
+		-ave: pdt==1, fixed rt, sec4[50] = 1; 
+		updated code for table 4.233, updated table 4.233, remove <sub> and </sub>
+		support for pdt 4.45, 4.46, 4.47
+		wgrib2.c: "g2lib/g2clib XXX decode may differ from WMO standard"
+		   replaced by "g2lib/g2clib XXX encode/decode may differ from WMO standard"
+		FlagTable.c break; break; -> break;
+		parallelize missing_points(), unpk_0, unpacking of simple packed fields
+		mk_sec5_sec7(): fixed seg fault when number of grid points is 0, added test for mem allocation
+		    affects v2.0.3-v2.0.4
+		jpeg_pk: if n_defined == 0, initialized min_val = max_val = 0.0, no change in validity of output
+		ext_name: do not print out code table 4.3 if value = 255
+		set_metadata: added   code table X.Y=Z  and flag table X.Y=Z
+		-set table_0.0, -set discipline  now works
+		unpk_run_length.c:  Takayuki Usui found that the code was off by one in reading the table
+		   values.  Suggested a bug fix.
+		-config show the version of IPOLATES library
+		makefile shows version of gcc
+		iplib.2012:  interpolation to Gaussian grid and writing to stdout
+		   fails: wgrib2 IN.grb -new_grid_winds earth -new_grid ncep grid t62 - | wgrib2 -
+                  debug write statement in gdswiz04.f gets written into grib message. Fortran and C
+		  buffers are not unified and problems occur on flushing the buffers.
+		  remove writes from gdswiz04.f and splat.f
+		iplib.v3.0.0:  added as possible iplib, same output, faster (16s -> 15s)
+		  will make it the default iplib after more testing
+		code table 4.15: added location function
+		preliminary support for PDT 4.57
+		set_pdt: copy percentile info, all probability info
+		units.c: added a2code_4_10()
+		new_grid: added ncep grid 194
+		added struct full_date: make code nicer by storing date in a structure
+		added Ref_time which is the same as reftime but uses struct full_date
+		added Get_time which is the same as get_time but uses struct full_date
+		New_grid.c added #ifdef CRAYCE for cray fortran compiler, cray compilers compatibility has not been tested
+		tried using setvbuf() but removed change: minimal improvement vs portability?
+		added --version as an alias to -version
+		added f_ftime2 code as a replacement of f_ftime: bug fixes, easier to understand
+		move f_ftime code to Ftime.c, in prep of eventual removal
+		changed makefile so that zlib is static than dynamic linked
+		changed makefile so that pngs grids can be up to (200M x 1M)
+		updated gribtable (HWRF upgrade)
+		Sam Trahan (HWRF upgrade) updated Spectral.c for the current defn of PDT 4.32 and mod ExtName
+		Gregor Schnee, Daniel Lee both of DWD: added support for CCSDS/aec compression, template 5.42
+		renamed min_max_array.c to openmp_util.c
+		openmp_util.c: added min_max_array_all_defined()
+		jpeg_pk: openmp to find min/max of data[]
+		complex_grib_out: preprocessing are now all openmp
+		complex_grib_out: problem when all grid points undefined, fixed  sec5[51] = 1; -> sec[41] = 1
+		    note: output is a valid grib file, possible problem when making file
+		added Verf_time(sec, &date;
+		AAIG.c AAIGlong.c: allow dx != dy cleanup (Manfred Schwarb)
+		cleanup: format, small errors, compiler warnings, grammar Manfred Schwarb
+		Manfred Schwarb: output from gctpc renamed gctpc_1.txt -> gctpc_error.txt  gctpc_2.txt -> gctpc_param.txt
+		simple_pk: handle case of n_defined == 0, affects v2.0.4
+		add_bitstream: can handle n_bits up to 32.  (previously was up to 25)
+		fread_mem:  (void *) mem_buffer[n] + mem_buffer_pos[n] ->  (void *) (mem_buffer[n] + mem_buffer_pos[n])
+		swap_buffer(a,b)  b changed from int to unsigned int
+v0.2.0.5rc  7/2016 -----------------------------------
+		mv Setftime2.c and Ftime2.c to *.cc (code in development)
+v0.2.0.5    7/2016 -----------------------------------

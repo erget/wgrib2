@@ -62,7 +62,7 @@ int f_fix_ncep(ARG0) {
 	fprintf(stdout,"nloops=%d\n", n);
         wrt_time(p1_units, uint4(p+18),inv_out);
 	fprintf(stdout,"P1=%s  ", inv_out);
-	fprintf(stdout,"Nave=%d  type=%d\n", uint4(p+42), type);
+	fprintf(stdout,"Nave=%u  type=%d\n", uint4(p+42), type);
         wrt_time(p[48], uint4(p+49),inv_out);
 	fprintf(stdout,"time1=%s", inv_out);
 
@@ -76,7 +76,7 @@ int f_fix_ncep(ARG0) {
         }
 	fprintf(stdout," time2=%s\n",inv_out);
 	fprintf(stdout," time: %d-%d-%d-%d\n", int2(p+34), p[36], p[37], p[38]);
-	fprintf(stdout," Nave=%d\n",NAve);
+	fprintf(stdout," Nave=%u\n",NAve);
     }
 
 //    if (stat_proc1 == 0 && stat_proc2 == 204) stat_proc1 = 204;

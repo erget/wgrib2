@@ -290,3 +290,13 @@ int reftime(unsigned char **sec, int *year, int *month, int *day, int *hour, int
     return 0;
 }
 
+int Ref_time(unsigned char **sec, struct full_date *date) {
+
+    return Get_time(sec[1]+12, date);
+
+}
+
+int Verf_time(unsigned char **sec, struct full_date *date) {
+    return verftime(sec, &date->year, &date->month, &date->day, &date->hour, &date->minute, &date->second);
+}
+

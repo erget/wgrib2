@@ -22,20 +22,19 @@
 
 /* BSIZ has to be a multiple of 4 */
 
-#define BSIZ (64*1024*4)
+#define BSIZ (64u*1024u*4u)
 
 extern int ieee_little_endian;
 
 int wrtieee(float *array, unsigned int n, int header, struct seq_file *out) {
 
-	unsigned int i, l, nbuf;
+	unsigned int i, j, l, nbuf, loop;
 	unsigned char buff[BSIZ];
-	int j, loop;
 
 	nbuf = 0;
 	if (header) {
 		if (n > 4294967295U / sizeof(float))
-			fatal_error("wrtieee: grid to large for 4-byte header","");
+			fatal_error("wrtieee: grid too large for 4-byte header","");
 		l = n * 4;
 
 		buff[nbuf  ] = (l >> 24) & 255;
@@ -44,28 +43,25 @@ int wrtieee(float *array, unsigned int n, int header, struct seq_file *out) {
 		buff[nbuf+3] = l         & 255;
 		nbuf += 4;
 	}
+	i = 0;
 	while (i < n) {
-		if (nbuf >= BSIZ) {
-		    if (ieee_little_endian) swap_buffer(buff, BSIZ);
-		    fwrite_file(buff, 1, BSIZ, out);
-		    nbuf = 0;
-		}
 		loop = (BSIZ - nbuf)/4;
 		loop  = (n-i) > loop ? loop : (n-i);
-#pragma omp parallel for private(j) schedule(static)
+#pragma omp parallel for private(j)
 		for (j = 0 ; j < loop; j++) {
 		    flt2ieee(array[i+j], buff + nbuf + j*4);
 		}
 		i += loop;
 		nbuf += 4*loop;
-	}
-	if (header) {
-		l = n * 4;
-		if (nbuf >= BSIZ) {
+
+		if (nbuf >= BSIZ) {		// nbuf should never be > BSIZ
 		    if (ieee_little_endian) swap_buffer(buff, BSIZ);
 		    fwrite_file(buff, 1, BSIZ, out);
 		    nbuf = 0;
 		}
+	}
+	if (header) {
+		l = n * 4;
 		buff[nbuf  ] = (l >> 24) & 255;
 		buff[nbuf+1] = (l >> 16) & 255;
 		buff[nbuf+2] = (l >>  8) & 255;

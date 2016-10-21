@@ -11,10 +11,8 @@ gctpc adds:
                  (limited to spherical earth, 0.001 degrees lat/lon precision)
 
 
-location:  http://edcftp.cr.usgs.gov/pub/software/gctpc/
+location:  http://edcftp.cr.usgs.gov/pub/software/gctpc/     (no longer available from this location)
 status: public domain
-
-gctpc support is experimental, turn on by -gctpc 1 (default), turn off by -gctpc 0
 
 Changes of the source code as distributed by USGS.
 

@@ -63,6 +63,11 @@ static int g95_runstop = 0;
 #define IPOLATEV ipolatev
 #endif
 
+#ifdef CRAYCE
+#define IPOLATES ipolates_
+#define IPOLATEV ipolatev_
+#endif
+
 void IPOLATES(int *interpol, int *ipopt, int *kgds, int *kgds_out, int *npnts, int *n_out0, 
 		int *km, int *ibi, unsigned char *bitmap, float *data_in, int *n_out, 
 		float *rlat, float *rlon, int *ibo, unsigned char *bitmap_out, 
@@ -594,7 +599,7 @@ int f_new_grid(ARG4) {
 	    fatal_error("new_grid: memory allocation problem","");
 
 	if (is_v) {
-#pragma omp parallel for private(i) schedule(static)
+#pragma omp parallel for private(i)
 	    for (i = 0; i < npnts; i++) {
                 if (DEFINED_VAL(data[i]) && DEFINED_VAL(save->u_val[i])) {
                     data_in[i] = save->u_val[i];
@@ -609,7 +614,7 @@ int f_new_grid(ARG4) {
 	    if (mode == 98) fprintf(stderr," UV interpolation %s , %s\n", save->name, name);
 	}
 	else {
-#pragma omp parallel for private(i) schedule(static)
+#pragma omp parallel for private(i)
 	    for (i = 0; i < npnts; i++) {
                 if (DEFINED_VAL(data[i])) {
                     data_in[i] = data[i];

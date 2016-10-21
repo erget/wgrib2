@@ -21,7 +21,8 @@
 
 int f_set_byte(ARG3) {
 
-    int i, j, k, m, val, seclen;
+    int i, j, k, m, seclen;
+    unsigned int val;
 
     i = atoi(arg1);
     if (mode < 0) {
@@ -34,12 +35,12 @@ int f_set_byte(ARG3) {
     else if (i == 8)  seclen = GB2_Sec8_size;
     else seclen = uint4(sec[i]);
 
-    k = sscanf(arg3, "%d%n", &val, &m);
+    k = sscanf(arg3, "%u%n", &val, &m);
     while (k == 1) {
 	if (j > seclen) fatal_error("set_byte out of bounds section %s",arg1);
 	sec[i][j++ -1] = val;
 	arg3 += m;
-        k = sscanf(arg3, ":%d%n", &val, &m);
+        k = sscanf(arg3, ":%u%n", &val, &m);
     }
     return 0;
 }
@@ -50,7 +51,8 @@ int f_set_byte(ARG3) {
 
 int f_set_hex(ARG3) {
 
-    int i, j, k, m, val, seclen;
+    int i, j, k, m, seclen;
+    unsigned int val;
 
     i = atoi(arg1);
     if (mode < 0) {

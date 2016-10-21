@@ -37,7 +37,7 @@ int f_lola(ARG4) {
 
     unsigned int i, j, k;
     unsigned int nx, ny, nxny;
-    long int long_i;
+    size_t long_i;
     double latitude, longitude;
     double x0,dx, y0,dy;
     unsigned char *new_sec[8];
@@ -60,7 +60,7 @@ int f_lola(ARG4) {
         if (sscanf(arg1,"%lf:%u:%lf", &x0, &nx, &dx) != 3) {
             fatal_error("lola parsing longitudes lon0:nx:dlon  %s", arg1);
         }
-        if (sscanf(arg2,"%lf:%u:%lf", &y0,&ny,&dy) != 3) {
+        if (sscanf(arg2,"%lf:%u:%lf", &y0, &ny, &dy) != 3) {
             fatal_error("lola parsing latitudes lat0:nx:dlat  %s", arg2);
         }
 
@@ -75,9 +75,9 @@ int f_lola(ARG4) {
         strcpy(open_mode, file_append ? "a" : "w");
         if (strcmp(arg4,"bin") == 0 || strcmp(arg4,"grib") == 0) strcat(open_mode,"b");
 
-        long_i= (long int) nx * (long int) ny;
+        long_i= (size_t) nx * (size_t) ny;
 	nxny = (unsigned int) long_i;
-	if ((long int) nxny != long_i) fatal_error("lola: grid has more than 2**32-1 grid points","");
+	if ((size_t) nxny != long_i) fatal_error("lola: grid has more than 2**32-1 grid points","");
 
         *local = save = (struct local_struct *)malloc( sizeof(struct local_struct));
         if (save == NULL) fatal_error("lola: memory allocation ","");
@@ -182,7 +182,7 @@ int f_lola(ARG4) {
 	if (save->out.cfile == NULL) fatal_error("lola: could not write text","");
         /* text output */
         if (header == 1) {
-            fprintf(save->out.cfile ,"%d %d\n", nx, ny);
+            fprintf(save->out.cfile ,"%u %u\n", nx, ny);
         }
         for (i = 0; i < nxny; i++) {
             t = save->iptr[i] >= 0 ? data[save->iptr[i]] : UNDEFINED;

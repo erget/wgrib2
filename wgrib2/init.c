@@ -89,7 +89,7 @@ extern unsigned char *old_gds;
 extern int nx, ny, res, scan;
 extern unsigned int nx_, ny_;
 extern unsigned int npnts;
-extern int use_scale, dec_scale, bin_scale,  max_bits, wanted_bits;
+extern int use_scale, input_scale, dec_scale, bin_scale,  max_bits, wanted_bits;
 extern enum output_grib_type grib_type;
 extern int use_bitmap;
 
@@ -175,7 +175,7 @@ void init_globals(void) {
     latlon = 0;
     GDS_change_no = 0;
     old_GDS_size = 0;
-    use_scale = 0;
+    use_scale = input_scale = 0;
     max_bits = 16;
     wanted_bits = 12;
     grib_type = simple;

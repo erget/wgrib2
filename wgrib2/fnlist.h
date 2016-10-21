@@ -42,6 +42,7 @@ int f_code_table_4_2(int mode, unsigned char **sec, float *data, unsigned int nd
 int f_code_table_4_230(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
 int f_code_table_4_233(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
 int f_code_table_4_235(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
+int f_code_table_4_240(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
 int f_code_table_4_3(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
 int f_code_table_4_4(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
 int f_code_table_4_5a(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
@@ -133,6 +134,7 @@ int f_Sec6(int mode, unsigned char **sec, float *data, unsigned int ndata, char 
 int f_Sec_len(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
 int f_spatial_proc(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
 int f_spectral_bands(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
+int f_spectral_bands_extname(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
 int f_start_ft(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
 int f_start_FT(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
 int f_stats(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
@@ -243,8 +245,10 @@ int f_v(int mode, unsigned char **sec, float *data, unsigned int ndata, char *in
 int f_v0(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
 int f_v(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
 int f_v2(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
+int f_v97(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
 int f_v98(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
 int f_v99(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
+int f_version(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
 int f_version(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
 int f_AAIG(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);
 int f_AAIGlong(int mode, unsigned char **sec, float *data, unsigned int ndata, char *inv, void **local);

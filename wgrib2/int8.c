@@ -23,6 +23,16 @@ unsigned int uint4(unsigned const char *p) {
 }
 
 /*
+ * if len character is 255 -> return 1 (missing)
+ */
+int is_missing(unsigned const char *p, int len) {
+    int i;
+    for (i = 0; i < len; i++) {
+	if (p[i] != 255) return 0;
+    }
+    return 1;
+}
+/*
  * uint4_missing
  * if missing return 0
  * uint4_missing is only used in Sec3.c where an undefined nx/ny == 0 is a good responce
@@ -246,3 +256,27 @@ void int2_char(int i, unsigned char *p) {
     p[1] = i & 255;
     return;
 }
+
+/*
+ * originally nx and ny were int with -1 == variable
+ * with the large grib conversions, nx and ny became unsigned int
+ * and zero became indicator of a variable size
+ *
+ * to keep the output the same .. have a function that returns a string variable
+ * non-threaded!
+ */
+
+char *nx_str(unsigned int nx) {
+   static char string[30];
+   if (nx == 0) return "-1";
+   sprintf(string,"%u", nx);
+   return string;
+}
+char *ny_str(unsigned int ny) {
+   static char string[30];
+   if (ny == 0) return "-1";
+   sprintf(string,"%u", ny);
+   return string;
+}
+
+

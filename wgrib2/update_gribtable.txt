@@ -9,7 +9,11 @@ Updating the grib table 9.2015
 2:1:0:0:0:26:WILT:Wilting Point:kg/m^3  -> WILTPT
 
  run make_gribtable.sh  by Manfred Schwarb
-
+edit gribtable.dat
+        remove notes
+	MCONV ->  MDIV  (:Horizontal Moisture Divergence:kg/k)
+        GEOLAT    deg -> degN
+        GEOLON    deg -> degE
 
 Updating the grib table 8.2015
  run get_gribtab.dat -> gribtab

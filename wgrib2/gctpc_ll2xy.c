@@ -64,7 +64,7 @@
  * get (x,y)
  *      int gctpc_ll2xy(int n, double *lon, double *lat, double *x, double *y);
  * get nearest neighbor
- *      int gctpc_ll2i(int n, double *lon, double *lat, int *i);
+ *      int gctpc_ll2i(int n, double *lon, double *lat, unsigned int *i);
  *
  */
 
@@ -169,7 +169,6 @@ int gctpc_ll2xy_init(unsigned char **sec, double *grid_lon, double *grid_lat) {
         rlat   = grid_lat[0] * (M_PI/180.0);
 
         long_i = psfor(rlon, rlat, &x_0, &y_0);
-
         x00 = x_0 - 0.5*dx;
         xN =  x_0 + (nx-0.5)*dx;
         forward_fn = &psfor;
@@ -260,7 +259,7 @@ int gctpc_ll2xy(int n, double *lon, double *lat, double *x, double *y) {
 
     if (forward_fn == NULL) return 1;
 
-#pragma omp parallel for schedule(static) private(i,rlon,rlat)
+#pragma omp parallel for private(i,rlon,rlat)
     for (i = 0; i < n; i++) {
         rlon = lon[i];
         if (rlon > xN) rlon -= 360.0;
@@ -275,24 +274,27 @@ int gctpc_ll2xy(int n, double *lon, double *lat, double *x, double *y) {
     return 0;
 }
 
-int gctpc_ll2i(int n, double *lon, double *lat, int *ipnt) {
-    int i, ix, iy;
+/* iptr[] == 0 for out of bounds */
+
+int gctpc_ll2i(int n, double *lon, double *lat, unsigned int *ipnt) {
+    int i;
+    unsigned int ix, iy;
     double rlon, rlat, x, y;
 
     if (gdt == 0) {             // lat-lon
-#pragma omp parallel for schedule(static) private(i,rlon,rlat,ix,iy)
+#pragma omp parallel for schedule(static) private(i,rlon,rlat,ix,iy, x, y)
         for (i = 0; i < n; i++) {
             rlon = lon[i];
             if (rlon > xN) rlon -= 360.0;
             if (rlon < x00) rlon += 360.0;
             rlat = lat[i];
-            ix = floor((rlon - x_0) * inv_dx + 0.5);
-            iy = floor((rlat - y_0) * inv_dy + 0.5);
-	    if (ix < 0 || ix >= nx || iy < 0 || iy >= ny) {
-		ipnt[i] = -1;
+            ix = x = floor((rlon - x_0) * inv_dx + 0.5);
+            iy = y = floor((rlat - y_0) * inv_dy + 0.5);
+	    if (x < 0 || x >= nx || y < 0 || y >= ny) {
+		ipnt[i] = 0;
 	    }
 	    else {
-		ipnt[i] = ix + nx*iy;
+		ipnt[i] = ix + nx*iy + 1;
 	    }
         }
         return 0;
@@ -308,13 +310,13 @@ int gctpc_ll2i(int n, double *lon, double *lat, int *ipnt) {
         rlat = lat[i] * (M_PI/180.0);
 
         forward_fn(rlon, rlat, &x, &y);
-        ix = floor((x - x_0)*inv_dx + 0.5);
-        iy = floor((y - y_0)*inv_dy + 0.5);
-	if (ix < 0 || ix >= nx || iy < 0 || iy >= ny) {
-	    ipnt[i] = -1;
+        ix = x = floor((x - x_0)*inv_dx + 0.5);
+        iy = y = floor((y - y_0)*inv_dy + 0.5);
+	if (x < 0 || x >= nx || y < 0 || y >= ny) {
+	    ipnt[i] = 0;
 	}
 	else {
-	    ipnt[i] = ix + nx*iy;
+	    ipnt[i] = ix + nx*iy + 1;
 	}
     }
     return 0;

@@ -13,33 +13,52 @@
  * routines to modify grib fields
  *
  * 3/2008 Public Domain by Wesley Ebisuzaki
+ * 3/2016 Wesley Ebisuzaki: allow +(dt) and -(dt)
  *
  */
 
 
 /*
- * HEADER:100:set_date:misc:1:changes date code .. keep old date code if not specified completely
+ * HEADER:100:set_date:misc:1:changes date code, X=(+|-)N(hr|dy|mo|yr), YYYYMMDDHHmmSS
  */
 
 int f_set_date(ARG1) {
 
     int year, month, day, hour, minute, second, i, j, units, n;
     int code_4_11,idx;
-    int dtime;
+    int dtime, dt_unit;
+    char string[10];
 
     if (mode < 0) return 0;
 
     reftime(sec, &year, &month, &day, &hour, &minute, &second);
 
-    i=strlen(arg1);
-    if (i < 4 || i % 2 == 1) fatal_error("set_date: bad date code %s",arg1); 
+    if (arg1[0] == '+' || arg1[0] == '-') {
+        i = sscanf(arg1+1, "%d%2s", &dtime, string);
+        if (i != 2 || dtime < 0) fatal_error("set_date: delta-time: (+|-)(int)(hr|dy|mo|yr)","");
+        dt_unit = -1;
+        if (strcmp(string,"hr") == 0) dt_unit = 1;
+        else if (strcmp(string,"dy") == 0) dt_unit = 2;
+        else if (strcmp(string,"mo") == 0) dt_unit = 3;
+        else if (strcmp(string,"yr") == 0) dt_unit = 4;
+        if (dt_unit == -1) fatal_error("set_date: unsupported time unit %s", string);
+	if (arg1[0] == '+')
+    		i = add_dt(&year, &month, &day, &hour, &minute, &second, dtime, dt_unit);
+	else
+    		i = sub_dt(&year, &month, &day, &hour, &minute, &second, dtime, dt_unit);
+    }
 
-    i = sscanf(arg1,"%4d%2d%2d%2d%2d%2d" , &year, &month, &day, &hour, &minute, &second);
-    if (i < 1) fatal_error("set_date: bad date code %s",arg1); 
+    else {
+        i=strlen(arg1);
+        if (i < 4 || i % 2 == 1) fatal_error("set_date: bad date code %s",arg1); 
 
-    if (check_datecode(year, month, day) != 0 || hour < 0 || hour >= 24 ||
-	minute < 0 || minute >= 60 || second < 0 || second >= 60) 
+        i = sscanf(arg1,"%4d%2d%2d%2d%2d%2d" , &year, &month, &day, &hour, &minute, &second);
+        if (i < 1) fatal_error("set_date: bad date code %s",arg1); 
+
+        if (check_datecode(year, month, day) != 0 || hour < 0 || hour >= 24 ||
+	    minute < 0 || minute >= 60 || second < 0 || second >= 60) 
 		fatal_error("set_date: bad date code %s",arg1);
+    }
 
     // set reference time
     save_time(year,month,day,hour,minute,second, sec[1]+12);

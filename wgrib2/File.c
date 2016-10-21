@@ -61,7 +61,7 @@ int f_bin(ARG1) {
             fwrite_file((void *) &i, sizeof(int), 1, save);
 	}
         j = fwrite_file((void *) data, sizeof(float), ndata, save);
-	if (j != ndata) fatal_error_i("bin: error writing grid point written=%d", j);
+	if (j != ndata) fatal_error_u("bin: error writing grid point written=%u", j);
         if (header) {
 	    i = ndata * sizeof(float);
 	    fwrite_file((void *) &i, sizeof(int),1, save);
