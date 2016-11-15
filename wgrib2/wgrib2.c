@@ -101,7 +101,7 @@ int GDS_max_size = 0;
 unsigned char *old_gds;
 int nx, ny, res, scan;
 unsigned int nx_, ny_, npnts;
-int use_scale, input_scale, dec_scale, bin_scale,  max_bits, wanted_bits;
+int use_scale, dec_scale, bin_scale,  max_bits, wanted_bits;
 enum output_grib_type grib_type;
 int user_gribtable_enabled = 0;		/* potential user gribtable has been enabled */
 int use_bitmap;		/* use bitmap when doing complex packing */
@@ -131,7 +131,6 @@ int wgrib2(int argc, const char **argv) {
     int file_arg, i, j, num_submsgs;
     int n_arg;
     unsigned int k, ndata;
-    int err_4_3_count;
     float *data;
     double ref;
 //    double *ddata, ref;
@@ -154,13 +153,12 @@ int wgrib2(int argc, const char **argv) {
     init_globals();
     init_inv_out();
     ndata = 0;
-    err_4_3_count = 0;
 
     if (initial_call) {		/* only done 1st time */
 	setup_user_gribtable();
 //      jas_init();
 //      gctpc initialiation
-        init(-1,-1,"gctpc_error,txt", "gctpc_param.txt");
+        init(-1,-1,"gctpc_1,txt", "gctpc_2.txt");
         initial_call = 0;
     }
 
@@ -168,7 +166,7 @@ int wgrib2(int argc, const char **argv) {
     dscale[0] = dscale[1] = 0;
     mode = 0;
 
-    if (fopen_file(&(rd_inventory_input), "-", "r")) fatal_error("opening stdin for rd_inventory","");
+    if (fopen_file(&(rd_inventory_input), "-", "r")) fatal_error("opening stdin for rd_inventry","");
     data = NULL;
 //    ddata = NULL;
 
@@ -510,7 +508,7 @@ int wgrib2(int argc, const char **argv) {
 
         /* see if new GDS */
 
-	if ((i = (int) GB2_Sec3_size(sec)) != old_GDS_size) {
+	if ((i = GB2_Sec3_size(sec)) != old_GDS_size) {
 	    new_GDS = 1;
 	}
 	else {
@@ -570,13 +568,13 @@ int wgrib2(int argc, const char **argv) {
 
 	/* yes this can be simplified but want to split it up in case other decoders have problems */
 	if (j == 0 && sec[5][19] == 0 && int2(sec[5] + 17) != 0 && ieee2flt(sec[5]+11) != 0.0) 
-		fprintf(stderr,"Warning: g2lib/g2clib/grib-api simple encode/decode may differ from WMO standard, use -g2clib 0 for WMO standard\n");
+		fprintf(stderr,"Warning: g2lib/g2clib/grib-api simple decode may differ from WMO standard, use -g2clib 0 for WMO standard\n");
 	if ((j == 2 || j == 3) && int2(sec[5]+17) != 0 && int4(sec[5] + 31) == 0 && ieee2flt(sec[5]+11) != 0.0) 
-		fprintf(stderr,"Warning: g2lib/g2clib complex encode/decode may differ from WMO standard, use -g2clib 0 for WMO standard\n");
+		fprintf(stderr,"Warning: g2lib/g2clib complex decode may differ from WMO standard, use -g2clib 0 for WMO standard\n");
 	if (j == 40 && sec[5][19] == 0 && int2(sec[5] + 17) != 0 && ieee2flt(sec[5]+11) != 0.0) 
-		fprintf(stderr,"Warning: g2lib/g2clib jpeg encode/deocde may differ from WMO standard, use -g2clib 0 for WMO standard\n");
+		fprintf(stderr,"Warning: g2lib/g2clib jpeg deocde may differ from WMO standard, use use -g2clib 0 for WMO standard\n");
 	if (j == 41 && sec[5][19] == 0 && int2(sec[5] + 17) != 0 && ieee2flt(sec[5]+11) != 0.0) 
-		fprintf(stderr,"Warning: g2lib/g2clib/grib-api png encode/decode may differ from WMO standard, use -g2clib 0 for WMO standard\n");
+		fprintf(stderr,"Warning: g2lib/g2clib/grib-api png decode may differ from WMO standard, use -g2clib 0 for WMO standard\n");
 
 	/* check the size of Section 7 */
 	/* code to check the other sizes needs to be placed in decode routines */
@@ -600,15 +598,6 @@ int wgrib2(int argc, const char **argv) {
 		if (decode) fatal_error("Section 7 size, mismatch, IEEE packing","");
 	    }
 	}
-
-	/* code table 4.3 can change units, warn if undefined */
-
-	if (err_4_3_count < 2) {
-	    if (code_table_4_3(sec) == 255) {
-		fprintf(stderr,"** WARNING input Code Table 4.3 = 255 (undefined) **\n");
-		err_4_3_count++;
-	    }
-        }
 #endif
 
 	if (decode) {
@@ -617,12 +606,12 @@ int wgrib2(int argc, const char **argv) {
             if (code_table_6_0(sec) == 0) {                         // has bitmap
                 k = GB2_Sec3_npts(sec) -  GB2_Sec5_nval(sec);
                 if (k != missing_points(sec[6]+6, GB2_Sec3_npts(sec)))
-                    fatal_error_uu("inconsistent number of bitmap points sec3-sec5: %u sec6: %u",
+                    fatal_error_ii("inconsistent number of bitmap points sec3-sec5: %d sec6: %d",
 			k, missing_points(sec[6]+6, GB2_Sec3_npts(sec)));
             }
             else if (code_table_6_0(sec) == 255) {                  // no bitmap
                 if (GB2_Sec3_npts(sec) != GB2_Sec5_nval(sec))
-                    fatal_error_uu("inconsistent number of data points sec3: %u sec5: %u",
+                    fatal_error_ii("inconsistent number of data points sec3: %d sec5: %d",
                         GB2_Sec3_npts(sec), GB2_Sec5_nval(sec));
             }
 #endif
@@ -655,27 +644,27 @@ int wgrib2(int argc, const char **argv) {
                 g2_data = &(grib_data->fld[0]);
                 if (has_bitmap == 0 || has_bitmap == 254) {
                     bitmap = grib_data->bmap;
-                    for (k = 0; k < ndata; k++) {
-                         data[k] = (bitmap[k] == 0) ? UNDEFINED : g2_data[k];
+                    for (i = 0; i < ndata; i++) {
+                         data[i] = (bitmap[i] == 0) ? UNDEFINED : g2_data[i];
                     }
                 }
                 else {
-                    for (k = 0; k < ndata; k++) {
-                        data[k] = g2_data[k];
+                    for (i = 0; i < ndata; i++) {
+                        data[i] = g2_data[i];
                     }
                 }
 
                 /* complex packing uses special values for undefined */
                 ii = sub_missing_values(sec, &missing_c_val_1, &missing_c_val_2);
                 if (ii == 1) {
-                    for (k = 0; k < ndata; k++) {
-                        if (data[k] == missing_c_val_1) data[k] = UNDEFINED;
+                    for (i = 0; i < ndata; i++) {
+                        if (data[i] == missing_c_val_1) data[i] = UNDEFINED;
                     }
                 }
                 else if (ii == 2) {
-                    for (k = 0; k < ndata; k++) {
-                        if (data[k] == missing_c_val_1) data[k] = UNDEFINED;
-                        if (data[k] == missing_c_val_2) data[k] = UNDEFINED;
+                    for (i = 0; i < ndata; i++) {
+                        if (data[i] == missing_c_val_1) data[i] = UNDEFINED;
+                        if (data[i] == missing_c_val_2) data[i] = UNDEFINED;
                     }
                 }
             }
@@ -725,7 +714,7 @@ int wgrib2(int argc, const char **argv) {
 
 	/* get scaling parameters */
 
-	use_scale = input_scale = scaling(sec, &ref, &dec_scale, &bin_scale, &i) == 0;
+	use_scale = scaling(sec, &ref, &dec_scale, &bin_scale, &i) == 0;
 
 	/* make sure msg_no:pos is put in inv_out so that -last will work */
 	new_inv_out();	// inv_out[0] = 0;
@@ -802,13 +791,13 @@ int wgrib2(int argc, const char **argv) {
             if (code_table_6_0(sec) == 0) {                         // has bitmap
                 k = GB2_Sec3_npts(sec) -  GB2_Sec5_nval(sec);
                 if (k != missing_points(sec[6]+6, GB2_Sec3_npts(sec)))
-                    fatal_error_uu("inconsistent number of bitmap points sec3-sec5: %u sec6: %u",
+                    fatal_error_ii("inconsistent number of bitmap points sec3-sec5: %d sec6: %d",
 			k, missing_points(sec[6]+6, GB2_Sec3_npts(sec)));
             }
             else if (code_table_6_0(sec) == 255) {                  // no bitmap
                 if (GB2_Sec3_npts(sec) != GB2_Sec5_nval(sec))
                     fatal_error_ii("inconsistent number of data points sec3: %d sec5: %d",
-                        (int) GB2_Sec3_npts(sec), (int) GB2_Sec5_nval(sec));
+                        GB2_Sec3_npts(sec), GB2_Sec5_nval(sec));
             }
 	}
 #endif

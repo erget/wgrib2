@@ -1,7 +1,5 @@
 # REQUIRES GMAKE!!!!
 #
-# wgrib2 uses components of varying copyrights and licences.  See wgrib2/LICENSE-wgrib2
-#
 # makefile for wgrib2
 # 
 # compiles every #@?! library needed by wgrib2
@@ -9,7 +7,7 @@
 #
 # (1) must use gnu-make
 # (2) the environment variable FC must be set to fortran-90 compiler or 
-#        higher in order to compile the optional netcdf and the optional IPOLATES
+#        higher in order to compile netcdf and the optional IPOLATES
 #        not needed if netcdf and IPOLATES is not used
 # (3) the environment veriable CC must be set to the C compiler
 #
@@ -24,7 +22,6 @@
 # mod 10/12 W. Ebisuzaki
 # mod 7/13 W. Ebisuzaki added got netcdf4 working again, added subdirectroy lib, bin, include, man
 # mod 11/14 W. Ebisuzaki added target lib, make callable wgrib2
-# mod 05/16 G. Schnee add support for template 5.42 compression using libaec
 #
 #   Configuration
 #
@@ -58,9 +55,6 @@
 #
 #  USE_PROJ4: the proj4 library is used to confirm that the
 #    gctpc code is working right.  
-#
-#  USE_AEC: enable use of the libaec library for packing with GRIB2 template
-#    5.42 (https://gitlab.dkrz.de/k202009/libaec/)
 #
 #  USE_G2CLIB: include NCEP's g2clib (mainly for testing purposes)
 #              USE_G2CLIB = 1, g2clib can be used for decoding by -g2clib 1
@@ -104,7 +98,7 @@ SHELL=/bin/sh
 #
 
 # Warning do not set both USE_NETCDF3 and USE_NETCDF4 to one
-USE_NETCDF3=1
+USE_NETCDF3=0
 USE_NETCDF4=0
 USE_REGEX=1
 USE_TIGGE=1
@@ -120,7 +114,6 @@ MAKE_FTN_API=0
 USE_G2CLIB=0
 USE_PNG=1
 USE_JASPER=1
-USE_AEC=1
 
 # Add any customization comments, appears in help and config pages
 BUILD_COMMENTS=stock build
@@ -221,26 +214,17 @@ ifeq ($(findstring xlc_r,$(notdir $(CC))),xlc_r)
    hdf5CFLAGS+=-O2
 endif
 ifeq ($(findstring clang,$(notdir $(CC))),clang)
-   wCPPFLAGS+=-O3 -pedantic
+   wCPPFLAGS+=-O3
    netcdf3CPPFLAGS+=-O3
    hdf5CFLAGS+=-O2
 endif
 
 # IPOLATES needs to be linked before fortran libraries
 ifeq ($(USE_IPOLATES),1)
-#   for HWRF
-#   ip:=${cwd}/iplib_hwrf
-#   iplib:=${lib}/libipolate_hwrf.a
-#   wLDFLAGS+=-lipolate_hwrf
-
-#  normal IPOLATES
-#   ip:=${cwd}/iplib.v3.0.0
    ip:=${cwd}/iplib.2012
    iplib:=${lib}/libipolate.a
    wLDFLAGS+=-lipolate
-
    a:=$(shell echo "\#define USE_IPOLATES" >> ${CONFIG_H})
-   a:=$(shell echo "\#define IPOLATES_LIB \"`basename ${ip}`\"" >> ${CONFIG_H})
 else
    a:=$(shell echo "//\#define USE_IPOLATES" >> ${CONFIG_H})
 endif
@@ -367,17 +351,6 @@ else
    a:=$(shell echo "//\#define USE_JASPER" >> ${CONFIG_H})
 endif
 
-# AEC
-
-ifeq ($(USE_AEC),1)
-   aecdir=${cwd}/libaec-0.3.3
-   aecsrc=libaec-0.3.3.tar.gz
-   aeclib=${lib}/libaec.a
-   wLDFLAGS+=-laec
-   a:=$(shell echo "\#define USE_AEC" >> ${CONFIG_H})
-else
-   a:=$(shell echo "//\#define USE_AEC" >> ${CONFIG_H})
-endif
 
 ifeq ($(USE_NETCDF3),1)
    n:=${cwd}/netcdf-3.6.3
@@ -448,20 +421,15 @@ endif
 
 # save fortran and C compiler names in config.h file
 
-ifeq ($(findstring gcc,$(notdir $(CC))),gcc)
-  a:=$(shell echo "\#define CC \"`${CC} --version | head -n 1`\"" >> ${CONFIG_H})
-else
-   a:=$(shell echo "\#define CC \"${CC}\"" >> ${CONFIG_H})
-endif
-
+a:=$(shell echo "\#define CC \"${CC}\"" >> ${CONFIG_H})
 a:=$(shell echo "\#define FORTRAN \"${FC}\"" >> ${CONFIG_H})
 a:=$(shell echo "\#define BUILD_COMMENTS \"${BUILD_COMMENTS}\"" >> ${CONFIG_H})
 
 # png 
 
 ifeq ($(USE_PNG),1)
-   p=${cwd}/libpng-1.2.56
-   psrc=${cwd}/libpng-1.2.56.tar.gz
+   p=${cwd}/libpng-1.2.54
+   psrc=${cwd}/libpng-1.2.54.tar.gz
    plib=${lib}/libpng.a
    wLDFLAGS+=-lpng
 # wCPPFLAGS+=-I$p
@@ -506,13 +474,13 @@ prog=$w/wgrib2
 all:	${netcdf4src} ${hdf5src} ${prog} aux_progs/gmerge aux_progs/smallest_grib2 aux_progs/smallest_4
 
 
-${prog}:        $w/*.c $w/*.h ${jlib} ${aeclib} ${nlib} ${zlib} ${plib} ${h5lib} ${glib} ${n4lib} ${iplib} ${gctpclib} ${proj4lib}
+${prog}:        $w/*.c $w/*.h ${jlib} ${nlib} ${zlib} ${plib} ${h5lib} ${glib} ${n4lib} ${iplib} ${gctpclib} ${proj4lib}
 	cd "$w" && export LDFLAGS="${wLDFLAGS}" && export CPPFLAGS="${wCPPFLAGS}" && ${MAKE}
 
-fast:        $w/*.c $w/*.h ${jlib} ${aeclib} ${nlib} ${zlib} ${plib} ${h5lib} ${glib} ${n4lib} ${iplib} ${gctpclib} ${proj4lib}
+fast:        $w/*.c $w/*.h ${jlib} ${nlib} ${zlib} ${plib} ${h5lib} ${glib} ${n4lib} ${iplib} ${gctpclib} ${proj4lib}
 	cd "$w" && export LDFLAGS="${wLDFLAGS}" && export CPPFLAGS="${wCPPFLAGS}" && ${MAKE} fast
 
-lib:        $w/*.c $w/*.h ${jlib} ${aeclib} ${nlib} ${zlib} ${plib} ${h5lib} ${glib} ${n4lib} ${iplib} ${gctpclib} ${proj4lib}
+lib:        $w/*.c $w/*.h ${jlib} ${nlib} ${zlib} ${plib} ${h5lib} ${glib} ${n4lib} ${iplib} ${gctpclib} ${proj4lib}
 	cd "$w" && export LDFLAGS="${wLDFLAGS}" && export CPPFLAGS="${wCPPFLAGS}" && export FFLAGS="${wFFLAGS}" && ${MAKE} lib
 	cp wgrib2/libwgrib2.a lib/libwgrib2_small.a
 ifeq ($(MAKE_FTN_API),1)
@@ -533,14 +501,6 @@ ${jlib}:
 	rm tmpj.tar
 	cd "$j" && export CFLAGS="${wCPPFLAGS}" && ./configure --without-x --disable-libjpeg --disable-opengl --prefix=${cwd} && ${MAKE} check install
 
-${aeclib}:
-	cp ${aecsrc} tmpaec.tar.gz
-	gunzip -n -f tmpaec.tar.gz
-	tar -xvf tmpaec.tar
-	rm tmpaec.tar
-	cd "${aecdir}" && export CFLAGS="${wCPPFLAGS}" && ./configure --disable-shared --prefix=${cwd} && ${MAKE} check install
-
-
 ${plib}:	${zlib}
 	cp ${psrc} tmpp.tar.gz
 	gunzip -n -f tmpp.tar.gz
@@ -549,15 +509,15 @@ ${plib}:	${zlib}
 #       for OSX
 #	export LDFLAGS="-L$z" && cd "$p" && export CPPFLAGS="${wCPPFLAGS}" && make -f scripts/makefile.darwin
 #	for everybody else
-#	export LDFLAGS="-L${lib}" && cd "$p" && export CPPFLAGS="${wCPPFLAGS}" && ./configure --disable-shared --prefix=${cwd} && ${MAKE} check install
-	export LDFLAGS="-L${lib}" && cd "$p" && export CPPFLAGS="${wCPPFLAGS} -DPNG_USER_WIDTH_MAX=200000000L" && ./configure --disable-shared --prefix=${cwd} && ${MAKE} check install
+	export LDFLAGS="-L${lib}" && cd "$p" && export CPPFLAGS="${wCPPFLAGS}" && ./configure --disable-shared --prefix=${cwd} && ${MAKE} check install
 
 ${zlib}:
 	cp $z.tar.gz tmpz.tar.gz
 	gunzip -f tmpz.tar.gz
 	tar -xvf tmpz.tar
 	rm tmpz.tar
-	cd "$z" && export CFLAGS="${wCPPFLAGS}" && ./configure --prefix=${cwd} --static && ${MAKE} check install
+	cd "$z" && export CFLAGS="${wCPPFLAGS}" && ./configure --prefix=${cwd} && ${MAKE} check install
+
 
 ${glib}:	${jlib} ${plib} ${zlib}
 	touch ${glib}
@@ -634,17 +594,13 @@ endif
 ifeq ($(USE_JASPER),1)
 	mkdir -p $j && rm -rf $j
 endif
-ifeq ($(USE_AEC),1)
-	mkdir -p ${aecdir} && rm -r ${aecdir}
-endif
 ifeq ($(USE_G2CLIB),1)
 	mkdir -p $g && cd $g && touch junk.a junk.o && rm *.o *.a
 endif
 ifeq ($(USE_IPOLATES),1)
 	echo "cleanup ${ip}"
-	mkdir -p ${ip} && touch ${ip}/junk.o ${ip}/junk.a ${ip}/junk.mod && rm ${ip}/*.o ${ip}/*.a ${ip}/*.mod
+	mkdir -p ${ip} && touch ${ip}/junk.o ${ip}/junk.a && rm ${ip}/*.o ${ip}/*.a
 endif
-
 ifeq ($(USE_NETCDF3),1)
 	mkdir -p $n && rm -rf $n
 endif

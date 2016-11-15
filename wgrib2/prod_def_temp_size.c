@@ -78,10 +78,18 @@ int prod_def_temp_size(unsigned char **sec) {
 		if (n <= 1) return 74;
 		return 62+12*n;
 	case 48: return 58;
+        case 49: return 61;
 	case 51: nb = sec[4][34];
 		return 35 + 12*nb;
 	/* case 53: -- looks like doc is bad */
 	/* case 54: -- looks like doc is bad */
+	case 55: return 40;
+	case 56: return 42; /* deprecated, replaced with template 59 */
+	case 57: n = sec[4][19]; /* Number of function parameters, may be 0 */
+		return 43+(n*5);
+        case 58: n = sec[4][19]; 
+                return 46+(5*n);
+        case 59: return 43;
 	case 60: return 44;
 	case 61: n = sec[4][51];
                 if (n <= 1) return 68;

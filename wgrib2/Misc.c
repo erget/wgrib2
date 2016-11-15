@@ -70,15 +70,6 @@ int f_v2(ARG0) {
 }
 
 /*
- * HEADER:-1:v97:misc:0:verbose mode for debugging only (v=98) 
- */
-
-int f_v97(ARG0) {
-    set_mode(97);
-    return 0;
-}
-
-/*
  * HEADER:-1:v98:misc:0:verbose mode for debugging only (v=98) 
  */
 

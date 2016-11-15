@@ -949,11 +949,9 @@ long int closest(unsigned char **sec, double plat, double plon) {
     unsigned int i, nnpts;
     int grid_type, j;
     double t, xx, yy, zz, small;
-    unsigned int k;
 
     if (use_gctpc && output_order == wesn && nx > 0 && ny > 0) {
-	/* will fix it so that everything is 0 for out of bounds */
-	if (gctpc_ll2i(1, &plon, &plat, &k) == 0) return ((long int) k) - 1;
+	if (gctpc_ll2i(1, &plon, &plat, &j) == 0) return j;
     }
 
     grid_type = code_table_3_1(sec);
@@ -978,7 +976,7 @@ long int closest(unsigned char **sec, double plat, double plon) {
     small_thread = 0.0;
     j_thread = -1;
    
-#pragma omp for nowait
+#pragma omp for schedule(static) nowait
     for (i = 0; i < nnpts; i++) {
 	if (x[i] >= 999.0) continue;
         t_thread = (x[i]-xx)*(x[i]-xx)+(y[i]-yy)*(y[i]-yy)+(z[i]-zz)*(z[i]-zz);

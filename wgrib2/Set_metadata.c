@@ -67,7 +67,7 @@ int set_metadata_string(ARG0, const char *line) {
     char string[STRING_SIZE];
     char ftime[STRING_SIZE];
 
-    char field[8][100], str1[100], str2[100], str3[100];
+    char field[8][100], str1[100],str2[100];
     double value1, value2;
   
     /* clear fields */
@@ -254,20 +254,6 @@ int set_metadata_string(ARG0, const char *line) {
 	    continue;
 	}
 	*/
-
-	// code table 4.3=255  -> -set table_4.3 255
-	j = sscanf(p,"code table %[^=]=%[0-9]",str1, str2);
-	if (j == 2) {
-	    sprintf(str3,"table_%s", str1);
-	    if (f_set(call_ARG2(inv_out,NULL,str3,str2)) == 0) continue;
-	}
-
-	// flag table 3.3=48 -> set table_3.3 48
-	j = sscanf(p,"flag table %[^=]=%[0-9]",str1, str2);
-	if (j == 2) {
-	    sprintf(str3,"table_%s", str1);
-	    if (f_set(call_ARG2(inv_out,NULL,str3,str2)) == 0) continue;
-	}
 
 	// see if -set X T will work
 	j = sscanf(p,"%[^=]=%s",str1, str2);

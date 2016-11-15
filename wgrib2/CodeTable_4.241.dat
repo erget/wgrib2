@@ -1,0 +1,6 @@
+    case 0: string="Undefined"; break;
+    case 1:  string="Unmodified"; break;
+    case 2: string="Snow-covered"; break;
+    case 3: string="Flooded"; break;
+    case 4: string="Ice covered"; break;
+    case 255: string="Missing"; break;

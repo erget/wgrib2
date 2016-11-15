@@ -39,7 +39,7 @@ static double from_lon, from_lat;
 int latlon_init(unsigned char **sec, unsigned int nx, unsigned int ny) {
 
     if (code_table_3_1(sec) != 0) fatal_error("latlon_init: not lat-lon grid","");
-    if (nx < 1 || ny < 1) fatal_error("latlon_init: program error nx, ny","");
+    if (nx <= 0 || ny <= 0) fatal_error("latlon_init: program error nx, ny","");
     if (lat == NULL || lon == NULL) fatal_error("latlon_init: lat/lon undefined","");
     if (output_order != wesn) fatal_error("latlon_init: order must be we:sn","");
 

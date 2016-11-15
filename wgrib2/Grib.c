@@ -13,42 +13,35 @@
  * routines to encode data into grib2
  *
  * 12/2007 Public Domain by Wesley Ebisuzaki
- * 05/2016 Public domain DWD
  *
  */
 
 extern int decode, nx, ny, scan;
 extern int file_append, flush_mode;
 extern enum output_order_type output_order;
-extern int use_scale, input_scale, dec_scale, bin_scale, max_bits, wanted_bits;
+extern int use_scale, dec_scale, bin_scale, max_bits, wanted_bits;
 extern int save_translation;
 extern enum output_grib_type grib_type;
 extern int use_bitmap;
 
 /*
- * HEADER:100:set_grib_type:misc:1:set grib type = jpeg, simple, ieee, complex(1|2|3), aec, same
+ * HEADER:100:set_grib_type:misc:1:set grib type = jpeg, simple, ieee, complex(1|2|3), same
  */
 
 int f_set_grib_type(ARG1) {
     int pack;
-    if (strcmp(arg1,"simple") == 0) grib_type = simple;
-    else if (strcmp(arg1,"s") == 0) grib_type = simple;
-#ifdef USE_JASPER
-    else if(strcmp(arg1,"jpeg") == 0) grib_type = jpeg;
+    if (strcmp(arg1,"jpeg") == 0) grib_type = jpeg;
     else if (strcmp(arg1,"j") == 0) grib_type = jpeg;
-#endif
     else if (strcmp(arg1,"ieee") == 0) grib_type = ieee_packing;
     else if (strcmp(arg1,"i") == 0) grib_type = ieee_packing;
+    else if (strcmp(arg1,"simple") == 0) grib_type = simple;
+    else if (strcmp(arg1,"s") == 0) grib_type = simple;
     else if (strcmp(arg1,"complex1") == 0) grib_type = complex1;
     else if (strcmp(arg1,"c1") == 0) grib_type = complex1;
     else if (strcmp(arg1,"complex2") == 0) grib_type = complex2;
     else if (strcmp(arg1,"c2") == 0) grib_type = complex2;
     else if (strcmp(arg1,"complex3") == 0) grib_type = complex3;
     else if (strcmp(arg1,"c3") == 0) grib_type = complex3;
-#ifdef USE_AEC
-    else if (strcmp(arg1,"aec") == 0) grib_type = aec;
-    else if (strcmp(arg1,"a") == 0) grib_type = aec;
-#endif
     else if (strcmp(arg1,"same") == 0) {
 	if (mode >= 0) {
             pack = code_table_5_0(sec);
@@ -59,12 +52,7 @@ int f_set_grib_type(ARG1) {
 	        else grib_type = complex3;
 	    }
 	    else if (pack == 4) grib_type = ieee_packing;
-#ifdef USE_JASPER
 	    else if (pack == 40) grib_type = jpeg;
-#endif
-#ifdef USE_AEC
-	    else if (pack == 42) grib_type = aec;
-#endif
 	    // cannot duplicate output grib type
 	    else grib_type = complex1;
 	}
@@ -132,18 +120,14 @@ int grib_wrt(unsigned char **sec, float *data, unsigned int ndata, unsigned int 
 
     if (grib_type == simple) simple_grib_out(sec, data, ndata, use_scale, dec_scale, bin_scale, wanted_bits, max_bits, out); 
     else if (grib_type == ieee_packing) ieee_grib_out(sec, data, ndata, out);
-#ifdef USE_JASPER
     else if (grib_type == jpeg) jpeg2000_grib_out(sec, data, ndata, nx, ny, use_scale, dec_scale, bin_scale, wanted_bits, max_bits, out);
-#endif
     else if (grib_type == complex1) complex_grib_out(sec, data, ndata, use_scale, dec_scale, bin_scale, wanted_bits, 
 	max_bits, 1, use_bitmap, out); 
     else if (grib_type == complex2) complex_grib_out(sec, data, ndata, use_scale, dec_scale, bin_scale, wanted_bits, 
 	max_bits, 2, use_bitmap, out); 
     else if (grib_type == complex3) complex_grib_out(sec, data, ndata, use_scale, dec_scale, bin_scale, wanted_bits, 
 	max_bits, 3, use_bitmap, out); 
-#ifdef USE_AEC
-    else if (grib_type == aec) aec_grib_out(sec, data, ndata, use_scale, dec_scale, bin_scale, wanted_bits, max_bits, out);
-#endif
+
     return 0;
 }
 
@@ -247,16 +231,15 @@ int f_set_bin_prec(ARG1) {
 }
 
 /*
- * HEADER:100:set_scaling:misc:2:set decimal scaling=X/same binary scaling=Y/same  new grib messages
+ * HEADER:100:set_scaling:misc:2:set decimal scaling=X binary scaling=Y for grib_out packing
  *
- * if arg1/arg2 == "same" then use the same value as input or -set_scaling (if after input)
+ * if arg1 == same .. use grib file definition
  */
 
 int f_set_scaling(ARG2) {
 
     struct local_struct {
         int dec, bin;
-	int use_previous_dec, use_previous_bin;
     };
     struct local_struct *save;
 
@@ -264,29 +247,15 @@ int f_set_scaling(ARG2) {
         *local = save = (struct local_struct *)malloc( sizeof(struct local_struct));
         if (save == NULL) fatal_error("set_scaling: memory allocation ","");
 
-	save->use_previous_dec = (strcmp(arg1,"same") == 0);
-	save->use_previous_bin = (strcmp(arg2,"same") == 0);
         save->dec = atoi(arg1);
         save->bin = atoi(arg2);
         use_scale = 1;
     }
     else if (mode >= 0) {
         save = (struct local_struct *) *local;
-	/* set scaling on,  use_scale = 1
-           either keep old values or reset to new values
-         */
-        use_scale = 1;
-       	if (save->use_previous_dec == 0) dec_scale = save->dec;
-       	if (save->use_previous_bin == 0) bin_scale = save->bin;
-	/* if previous values are bad then  input_scale = 0
-           if previous values are used then don't use scaling
-         */
-	if (input_scale == 0 && (save->use_previous_dec || save->use_previous_bin)) use_scale = 0;
-
-    }
-    else if (mode == -2) {
-        save = (struct local_struct *) *local;
-	free(save);
+       	use_scale = 1;
+        dec_scale = save->dec;
+        bin_scale = save->bin;
     }
     return 0;
 }

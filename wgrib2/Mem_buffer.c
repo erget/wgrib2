@@ -3,6 +3,7 @@
 #include <string.h>
 #include <math.h>
 #include <limits.h>
+#include "junk.h"
 #include "grb2.h"
 #include "wgrib2.h"
 #include "fnlist.h"
@@ -173,7 +174,7 @@ size_t fread_mem(void *ptr, size_t size, size_t nmemb, int n) {
     nread = (mem_buffer_size[n] - mem_buffer_pos[n]) / size;
     if (nread > nmemb) nread = nmemb;
     i = nread * size;
-    memcpy((void *) ptr, (void *) (mem_buffer[n] + mem_buffer_pos[n]), i);
+    memcpy((void *) ptr, (void *) mem_buffer[n] + mem_buffer_pos[n], i);
     mem_buffer_pos[n] += i;
     return nread;
 }
@@ -235,7 +236,7 @@ size_t wgrib2_get_mem_buffer_size(int n) {
 int wgrib2_get_mem_buffer(int n, size_t size, unsigned char *my_buffer) {
     if (n < 0 || n >= N_mem_buffers) return 1;
     if (size != mem_buffer_size[n]) {
-        fprintf(stderr,"*** error get_mem_buffer buffer(%d) size=%ld to %lu\n", n, mem_buffer_size[n], size);
+        fprintf(stderr,"*** error get_mem_buffer buffer(%d) size=%ld to %ld\n", n, mem_buffer_size[n], size);
 	return 2;
     }
     memcpy(my_buffer, mem_buffer[n], size);
@@ -244,7 +245,7 @@ int wgrib2_get_mem_buffer(int n, size_t size, unsigned char *my_buffer) {
 
 int wgrib2_set_mem_buffer(int n, size_t size, unsigned char *my_buffer) {
     if (n < 0 || n >= N_mem_buffers) return 1;
-    if (size == 0) {
+    if (size <= 0) {
         mem_buffer_size[n] = 0;
     }
     else {

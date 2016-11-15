@@ -12,8 +12,6 @@
 //       (limit of bitstream unpacking routines)
 // note: assumption that all data can be stored as integers and have a value < INT_MAX
 
-// #define DEBUG
-
 int unpk_complex(unsigned char **sec, float *data, unsigned int ndata) {
 
     unsigned int i, j, n;
@@ -80,12 +78,6 @@ int unpk_complex(unsigned char **sec, float *data, unsigned int ndata) {
     group_length_factor = p[41];
     len_last = uint4(p+42);
     nbits_group_len = p[46];
-
-#ifdef DEBUG
-    fprintf(stderr,"ctable 5.4 %d ref_group_width %u nbit_group_width %u ref_group_length %u group_length_factor %d\n",
-        ctable_5_4, ref_group_width, nbit_group_width, ref_group_length, group_length_factor);
-    fprintf(stderr,"len_last %u nbit_group_len %u\n", len_last, nbits_group_len);
-#endif
 
     npnts =  GB2_Sec5_nval(sec); 	// number of defined points
     n_sub_missing = sub_missing_values(sec, &missing1, &missing2);
@@ -206,7 +198,7 @@ int unpk_complex(unsigned char **sec, float *data, unsigned int ndata) {
     }
 }
 
-    if (j != npnts) fatal_error_u("bad complex packing: n points %u",j);
+    if (j != npnts) fatal_error_i("bad complex packing: n points %d",j);
     if (d + (n+7)/8 - sec[7] != GB2_Sec7_size(sec))
         fatal_error("complex unpacking size mismatch old test","");
 

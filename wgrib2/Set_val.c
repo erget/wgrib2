@@ -27,8 +27,7 @@ extern unsigned int npnts;
 
 int f_set_ijval(ARG3) {
 
-    size_t i;
-    long int tmp;
+    unsigned int i;
     struct local_struct {
         unsigned int ix, iy;
 	float val;
@@ -42,15 +41,12 @@ int f_set_ijval(ARG3) {
         *local = save = (struct local_struct *) malloc( sizeof(struct local_struct));
         if (save == NULL) fatal_error("memory allocation f_ijval","");
 
-	tmp = atol(arg1);
-	if (tmp < 1) fatal_error_i("ijval: ix value (%d) should be >= 1", (int) tmp);
         save->ix = atol(arg1) - 1;
-
-	tmp = atol(arg2);
-	if (tmp < 1) fatal_error_i("ijval: iy value (%d) should be >= 1", (int) tmp);
         save->iy = atol(arg2) - 1;
         save->val = atof(arg3);
 
+	if (save->ix < 0) fatal_error_i("ijval: ix value (%d) should be >= 1", save->ix + 1);
+	if (save->iy < 0) fatal_error_i("ijval: iy value (%d) should be >= 1", save->iy + 1);
     }
     else if (mode == -2) {
 	free(*local);
@@ -62,9 +58,9 @@ int f_set_ijval(ARG3) {
     y = save->iy;
 
     if (GDS_Scan_staggered(scan)) fatal_error("ijval: does not support staggered grid","");
-    i = x + y * (size_t) nx;
-    if (i < ndata) data[i] = save->val;
-    else fatal_error_uu("ijval: failed with (%ux%u)",x,y);
+    i = x + y*nx;
+    if (i < ndata) data[x + y*nx] = save->val;
+    else fatal_error_ii("ijval: failed with (%ux%u)",x,y);
     return 0;
 }
 
@@ -88,7 +84,7 @@ int f_set_ival(ARG2) {
     while (err1 == 1 && err2 == 1) {
 // fprintf(stderr,"set_ival i=%u v=%f\n",i,val);        
 	if (i != 0 && i <= ndata) data[i-1] = val;
-	else fatal_error_uu("set_ival: i=%u ndata=%u", i, ndata);
+	else fatal_error_ii("set_ival: i=%u ndata=%u", i, ndata);
 	arg1 += icnt;
 	arg2 += vcnt;
 	err1 = sscanf(arg1,":%u%n", &i, &icnt);

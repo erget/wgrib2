@@ -5,11 +5,6 @@
 #include "fnlist.h"
 
 /*
- *  6/2016 Public Domain  Wesley Ebisuzaki
- *         support for AEC compression, DWD
- */
-
-/*
  * HEADER:400:Sec5:inv:0:Sec 5 values (Data representation section)
  */
 int f_Sec5(ARG0) {
@@ -63,7 +58,6 @@ int f_packing(ARG0) {
 	    else if (pack == 2) sprintf(inv_out,",c1");
 	    else if (pack == 3) sprintf(inv_out,",c%d", code_table_5_6(sec)+1);
 	    else if (pack == 40) sprintf(inv_out,",j");
-	    else if (pack == 42) sprintf(inv_out,",a");
 	    else sprintf(inv_out,",_");
 	    inv_out += strlen(inv_out);
 	}
@@ -95,14 +89,6 @@ int f_packing(ARG0) {
             else if (pack == 4) {
 		sprintf(inv_out," precision code=%u", p[11]);
             }
-	    else if (pack == 42) {
-		sprintf(inv_out," val=(%lg+i*2^%d)*10^%d, i=0..%d (#bits=%d)",
-			ieee2flt(p+11), int2(p+15), -int2(p+17), (1 << p[19])-1, p[19]);
-		inv_out += strlen(inv_out);
-		sprintf(inv_out," compression options mask=%d samples/block=%d reference sample interval=%u",
-			(int) p[21], (int) p[22], uint2(p+23) );
-		inv_out += strlen(inv_out);
-	    }
 	    else if (pack == 51) {
                 sprintf(inv_out," val=(%lg+i*2^%d)*10^%d, i=0..%d (#bits=%d)", 
                 ieee2flt(p+11), int2(p+15), -int2(p+17), (1 << p[19])-1, p[19]);

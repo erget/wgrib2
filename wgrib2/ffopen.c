@@ -21,7 +21,7 @@
  *                otherwise run out of file handles
  *
  *  v1.3 4/2015 WNE added @tmp:XXXX  temporary files, added for callable wgrib2
- *                        @mem:N
+ *  
  */
 
 extern int flush_mode;

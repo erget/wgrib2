@@ -1,6 +1,5 @@
 /* unpack_grib 
  * 3/2008 public domain Wesley Ebisuzaki
- * 5/2016 public domain DWD
  */
 
 #include <stdio.h>
@@ -15,20 +14,15 @@
 #ifdef USE_PNG
    #include <png.h>
    int dec_png_clone(unsigned char *,int *,int *,char *);
-   int i;
 #endif
 #ifdef USE_JASPER
    #include <jasper/jasper.h>
 #endif
 
-#ifdef USE_AEC
-	#include <libaec.h>
-#endif
-
 /*
  * unpack grib -- only some formats (code table 5.0) are supported
  *
- * supported: 0 (simple), 4 (ieee), 40 (jpeg), 41(png), 42(aec)
+ * supported: 0 (simple), 4 (ieee), 40 (jpeg), 41(png)
  *
  * input:  sec[]
  *         float data[npnts]
@@ -41,9 +35,7 @@ int unpk_grib(unsigned char **sec, float *data) {
     unsigned int ndata, ii;
     unsigned char *mask_pointer, mask;
     unsigned char *ieee, *p;
-    float tmp;
-    // float reference, tmp;
-    double reference;
+    float reference, tmp;
     double bin_scale, dec_scale, b;
 
 #ifdef USE_PNG
@@ -56,19 +48,13 @@ int unpk_grib(unsigned char **sec, float *data) {
     jas_stream_t *jpcstream;
     jas_image_cmpt_t *pcmpt;
     jas_matrix_t *jas_data;
-    int j, k;
+    int i, j, k;
 #endif
 
-#if (defined USE_PNG || defined USE_JASPER || defined USE_AEC)
+#if (defined USE_PNG || defined USE_JASPER)
     unsigned char *c;
 #endif
 
-#ifdef USE_AEC
-    struct aec_stream strm;
-    int status;
-    int numBitsNeeded;
-    size_t size;
-#endif
 
     packing = code_table_5_0(sec);
     // ndata = (int) GB2_Sec3_npts(sec);
@@ -82,7 +68,7 @@ int unpk_grib(unsigned char **sec, float *data) {
         if (sec[5][11] != 1) fatal_error_i("unpk ieee grib file precision %d not supported", 
 		(int) sec[5][11]);
 
-        // ieee depacking -- simple no bitmap
+        // ieee depacking -- simple no bitmap etc testing
         if (bitmap_flag == 255) {
             for (ii = 0; ii < ndata; ii++) {
                 data[ii] = ieee2flt_nan(sec[7]+5+ii*4);
@@ -292,65 +278,7 @@ int unpk_grib(unsigned char **sec, float *data) {
 	return 0;
     }
 #endif
-#ifdef USE_AEC
-    else if (packing == 42) {		// aec
 
-    	p = sec[5];
-    	reference = ieee2flt(p+11);
-    	bin_scale = Int_Power(2.0, int2(p+15));
-    	dec_scale = Int_Power(10.0, -int2(p+17));
-    	nbits = p[19];
-
-    	if (nbits == 0) {
-    	    tmp = reference*dec_scale;
-    	    if (bitmap_flag == 255) {
-    		for (ii = 0; ii < ndata; ii++) {
-    		    data[ii] = tmp;
-    		}
-    		return 0;
-    	    }
-    	    if (bitmap_flag == 0 || bitmap_flag == 254) {
-    		mask_pointer = sec[6] + 6;
-    		mask = 0;
-    		for (ii = 0; ii < ndata; ii++) {
-    		    if ((ii & 7) == 0) mask = *mask_pointer++;
-    		    data[ii] = (mask & 128) ?  tmp : UNDEFINED;
-    		    mask <<= 1;
-    		}
-    		return 0;
-    	    }
-    	    fatal_error("unknown bitmap", "");
-    	}
-
-
-        strm.flags = (int) sec[5][21];
-        strm.bits_per_sample = (int) sec[5][19];
-        strm.block_size = (int) sec[5][22];
-        strm.rsi = uint2(sec[5]+23);
-
-	strm.next_in = sec[7]+5;
-	strm.avail_in = uint4(sec[7]) - 5;
-
-	numBitsNeeded = (int) sec[5][19];
-	size = ((numBitsNeeded + 7)/8) * (size_t) ndata;
-
-        if ((c = (unsigned char *) malloc(size)) == NULL) fatal_error("unpk: allocation error", "");
-
-	strm.next_out = c;
-	strm.avail_out = size;
-
-        status = aec_buffer_decode(&strm);
-
-        if (status != AEC_OK) fatal_error_i("unpk: aec decode error %d",status);
-
-    	mask_pointer = (bitmap_flag == 255) ? NULL : sec[6] + 6;
-
-    	unpk_0(data, c, mask_pointer, ((nbits+7)/8)*8, ndata, reference, bin_scale, dec_scale);
-
-    	free(c);
-    	return 0;
-    }
-#endif
     fatal_error_i("packing type %d not supported", packing);
     return 1;
 }

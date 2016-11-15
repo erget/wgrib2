@@ -1,0 +1,10 @@
+    case 0: string="No specific distribution function given"; break;
+    case 1:  string="Delta functions with spatially variable concentration and fixed diameters in meter"; break;
+    case 2: string="Delta functions with spatially variable concentration and fixed mass in kg"; break;
+    case 3: string="Gaussian (Normal) distribution with spatially variable concentration and fixed mean diameter and variance"; break;
+    case 4: string="Gaussian (Normal) distribution with spatially variable concentration, mean diameter and variance"; break;
+    case 5: string="Log-normal distribution with spatially variable number density, mean diameter and variance"; break;
+    case 6: string="Log-normal distribution with spatially variable number density, mean diameter and fixed variance"; break;
+    case 7: string="Log-normal distribution with spatially variable number density and mass density and fixed variance and fixed particle density"; break;
+    case 8: string="No distribution function. The encoded variale is derived from variables characterized by type of distribution of type no. 7 (see above) with fixed variance &#963 (p1) and fixed particle density &#1009 (p2)"; break;    
+    case 65535: string="Missing"; break;

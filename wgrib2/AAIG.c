@@ -12,13 +12,12 @@
  *
  * 7/2008 v0.9: Public Domain: Wesley Ebisuzaki
  * 10/2010 v0.99: bug fix H. Peifer
- * 7/2016  v1.0  Manfred Schwarb, allow dx != dy
  */
 
 
 extern int decode, latlon;
 extern double *lat, *lon;
-extern unsigned int nx_, ny_;
+extern int nx_, ny_;
 extern enum output_order_type output_order, output_order_wanted;
 
 /*
@@ -27,10 +26,12 @@ extern enum output_order_type output_order, output_order_wanted;
 
 int f_AAIG(ARG0) {
 
-    double cellsize, dlon, dlat;
+    int grid_template;
+    double cellsize;
     char *save_inv_out, level[STRING_SIZE], file[STRING_SIZE], name[STRING_SIZE];
+    int year0, month0, day0, hour0, minute0, second0;
+    int year, month, day, hour, minute, second;
     size_t i, j;
-    struct full_date date_ref, date_verf;
     FILE *out;
 
     if (mode == -1) {
@@ -47,7 +48,9 @@ int f_AAIG(ARG0) {
         fprintf(stderr,"AAIG does nothing, not in we:sn order\n");
         return 0;
     }
-    if (code_table_3_1(sec) != 0) {	// check for lat/lon grid
+
+    grid_template = code_table_3_1(sec);
+    if (grid_template != 0) {
         fprintf(stderr,"AAIG does nothing, not lat-lon grid\n");
         return 0;
     }
@@ -55,9 +58,17 @@ int f_AAIG(ARG0) {
         fprintf(stderr,"AAIG does nothing, found thinned lat-lon grid\n");
         return 0;
     }
-    cellsize = dlon = lon[1] - lon[0];
-    dlat = lat[nx_] - lat[0];
-    if ( fabs(dlat - dlon) > 0.0001*dlon) cellsize = 0.0;
+    cellsize = -1.0;
+    if (nx_ > 1) {
+	cellsize = lon[1] - lon[0];
+	if ( fabs(lat[nx_]-lat[0] - cellsize) > 0.0001*cellsize) {
+            fprintf(stderr,"AAIG does nothing, dlon != dlat\n");
+            return 0;
+	}
+    }
+    else {
+	cellsize = lat[nx_] - lat[0];
+    }
 
     *name = *level = 0;
 
@@ -74,20 +85,21 @@ int f_AAIG(ARG0) {
 	save_inv_out++;
     }
 
-    Ref_time(sec, &date_ref);
+    reftime(sec, &year0, &month0, &day0, &hour0, &minute0, &second0);
 
-    if (Verf_time(sec, &date_verf) != 0) {
+    if (verftime(sec, &year, &month, &day, &hour, &minute, &second) != 0) {
         fprintf(stderr,"f_AAIG no verf time\n");
-	date_verf = date_ref;
+	year = year0;
+	month = month0;
+	day = day0;
+	hour = hour0;
     }
-    if (date_verf.year == date_ref.year && date_verf.month == date_ref.month && 
-        date_verf.day == date_ref.day && date_verf.hour == date_ref.hour) {
-        sprintf(file,"%s.%s.%4.4d%2.2d%2.2d%2.2d.asc",name,level,date_ref.year,date_ref.month,date_ref.day,date_ref.hour);
+    if (year == year0 && month == month0 && day == day0 && hour == hour0) {
+        sprintf(file,"%s.%s.%4.4d%2.2d%2.2d%2.2d.asc",name,level,year,month,day,hour);
     } 
     else {
         sprintf(file,"%s.%s.%4.4d%2.2d%2.2d%2.2d_%4.4d%2.2d%2.2d%2.2d.asc",
-		name,level, date_ref.year,date_ref.month,date_ref.day,date_ref.hour,
-	        date_verf.year,date_verf.month,date_verf.day,date_verf.hour);
+		name,level,year0,month0,day0,hour0,year,month,day,hour);
     }
 
     if ((out = ffopen(file,"w")) == NULL) {
@@ -101,13 +113,7 @@ int f_AAIG(ARG0) {
     fprintf(out,"nrows %u\n", ny_);
     fprintf(out,"xllcenter %lf\n", lon[0] > 180.0 ? lon[0]-360.0 : lon[0]);
     fprintf(out,"yllcenter %lf\n", lat[0]);
-    if (cellsize > 0.0) {
-      fprintf(out,"cellsize %lf\n", cellsize);
-    }
-    else {
-      fprintf(out,"dx       %lf\n", dlon);
-      fprintf(out,"dy       %lf\n", dlat);
-    }
+    fprintf(out,"cellsize %lf\n", cellsize);
     fprintf(out,"NODATA_VALUE 9.999e20\n");
     for (j = 0; j < ny_; j++) {
 	for (i = 0; i < nx_; i++) {

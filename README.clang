@@ -1,6 +1,6 @@
 Compiling with clang (C language frontend for LLVM)
 
-tested with Ubuntu 12.04 and 14.xx
+tested with a Ubuntu 12.04 system
 
 export CC=clang
 export FC=gfortran -fplugin=dragonegg

@@ -17,7 +17,6 @@
  * 4/2013: added pdt 4.11 (ensemble)
  * 12/2014: set use_scale to zero, optimizations
  * 1/2015: removed set use_scale
- * 3/2016: added pdt 2 and 12
  *
  */
 
@@ -31,8 +30,7 @@ extern enum output_grib_type grib_type;
 
 struct ave_struct {
         double *sum;
-        int *n;
-	unsigned int n_sum;      
+        int *n, n_sum;
         int has_val, n_fields, n_missing;
 	int dt, dt_unit, nx, ny;
         unsigned char *first_sec[9];
@@ -47,8 +45,8 @@ struct ave_struct {
 
 static int do_ave(struct ave_struct *save);
 static int free_ave_struct(struct ave_struct *save);
-static int init_ave_struct(struct ave_struct *save, unsigned int ndata);
-static int add_to_ave_struct(struct ave_struct *save, unsigned char **sec, float *data, unsigned int ndata,int missing);
+static int init_ave_struct(struct ave_struct *save, int ndata);
+static int add_to_ave_struct(struct ave_struct *save, unsigned char **sec, float *data, int ndata,int missing);
 
 
 static int free_ave_struct(struct ave_struct *save) {
@@ -62,7 +60,7 @@ static int free_ave_struct(struct ave_struct *save) {
     return 0;
 }
 
-static int init_ave_struct(struct ave_struct *save, unsigned int ndata) {
+static int init_ave_struct(struct ave_struct *save, int ndata) {
     unsigned int i;
     if (save->has_val == 0 || save->n_sum != ndata) {
 	if (save->has_val == 1) {
@@ -88,8 +86,8 @@ static int init_ave_struct(struct ave_struct *save, unsigned int ndata) {
     return 0;
 }
 
-static int add_to_ave_struct(struct ave_struct *save, unsigned char **sec, float *data, unsigned int ndata,int missing) {
-    unsigned int i;
+static int add_to_ave_struct(struct ave_struct *save, unsigned char **sec, float *data, int ndata,int missing) {
+    int i;
 
     if (save->n_sum != ndata) fatal_error("add_to_ave: dimension mismatch","");
 
@@ -138,8 +136,8 @@ static int add_to_ave_struct(struct ave_struct *save, unsigned char **sec, float
 
 
 static int do_ave(struct ave_struct *save) {
-    int j, n, pdt;
-    unsigned int i, ndata;
+    int j, n, ndata, pdt;
+    unsigned int i;
     float *data;
     unsigned char *p, *sec4;
     double factor;
@@ -188,39 +186,17 @@ static int do_ave(struct ave_struct *save) {
             sec4[i] = save->first_sec[4][i];
         }
         uint_char((unsigned int) 61, sec4);             // length
-        sec4[8] = 11;                    		// pdt
+        sec4[8] = 11;                    // pdt
         // verification time
         save_time(save->year2,save->month2,save->day2,save->hour2,save->minute2,save->second2, sec4+37);
         sec4[44] = 1;                                   // 1 time range
         uint_char(save->n_missing, sec4+45);
         sec4[49] = 0;                                   // average
-        sec4[50] = 1;                                   // rt=constant
+        sec4[50] = 2;                                   // rt=constant, ft++
         sec4[51] = save->dt_unit;                                       // total length of stat processing
         uint_char(save->dt*(save->n_fields+save->n_missing-1), sec4+52);
         sec4[56] = save->dt_unit;                                       // time step
         uint_char(save->dt, sec4+57);
-    }
-
-    // average of derived fcst base on all ens members, use pdt 4.12
-
-    else if (pdt == 2) {
-        sec4 = (unsigned char *) malloc(60 * sizeof(unsigned char));
-        if (sec4 == NULL) fatal_error("fcst_ave: memory allocation","");
-        for (i = 0; i < 36; i++) {
-            sec4[i] = save->first_sec[4][i];
-        }
-        uint_char((unsigned int) 60, sec4);             // length
-        sec4[8] = 12;                    		// pdt
-        // verification time
-        save_time(save->year2,save->month2,save->day2,save->hour2,save->minute2,save->second2, sec4+36);
-        sec4[43] = 1;                                   // 1 time range
-        uint_char(save->n_missing, sec4+44);
-        sec4[48] = 0;                                   // average
-        sec4[49] = 1;                                   // rt=constant
-        sec4[50] = save->dt_unit;                       // total length of stat processing
-        uint_char(save->dt*(save->n_fields+save->n_missing-1), sec4+51);
-        sec4[55] = save->dt_unit;                       // time step
-        uint_char(save->dt, sec4+56);
     }
 
     // average of an average or accumulation
@@ -250,51 +226,17 @@ static int do_ave(struct ave_struct *save) {
 	// for (j = n*12-1;  j >= 0; j--) sec4[58+j] = save->first_sec[4][46+j];
 	for (j = 0; j < n*12; j++) sec4[46+12+j] = save->first_sec[4][46+j];
 
+#ifdef DEBUG
+printf("save->n_missing =%d save->n_fields=%d\n",save->n_missing,save->n_fields);
+#endif
 	uint_char(save->n_missing, sec4+42);
 	sec4[46] = 0;			// average
 	sec4[47] = 1;			// rt++
 	sec4[48] = save->dt_unit;						// total length of stat processing
-	uint_char(save->dt*(save->n_fields+save->n_missing-1), sec4+49);	// processing number
+	uint_char(save->dt*(save->n_fields+save->n_missing-1), sec4+49);	// missing
 	sec4[53] = save->dt_unit;						// time step
 	uint_char(save->dt, sec4+54);
     }
-
-    // pdt 4.12 -> pdt 4.12 ave -> ave of ave
-
-    else if (pdt == 12) {
-        i = GB2_Sec4_size(save->first_sec);
-        n = save->first_sec[4][43];			// number of time ranges
-        if (i != 48 + 12*n) fatal_error("ave: invalid sec4 size for pdt=12","");
-
-        // keep pdt == 12 but make it 12 bytes bigger
-        sec4 = (unsigned char *) malloc( (i+12) * sizeof(unsigned char));
-        if (sec4 == NULL) fatal_error("ave: memory allocation","");
-
-        uint_char((unsigned int) i+12, sec4);           // new length
-
-        for (i = 4; i < 36; i++) {                      // keep base of pdt
-            sec4[i] = save->first_sec[4][i];
-        }
-
-        // new verification time
-        save_time(save->year2,save->month2,save->day2,save->hour2,save->minute2,save->second2, sec4+36);
-
-        // number of stat-proc loops is increased by 1
-        sec4[43] = n + 1;
-
-        // copy old stat-proc loops
-        for (j = 0; j < n*12; j++) sec4[48+12+j] = save->first_sec[4][48+j];
-
-        uint_char(save->n_missing, sec4+44);
-        sec4[48] = 0;                   // average
-        sec4[49] = 1;                   // rt++
-        sec4[50] = save->dt_unit;                                               // total length of stat processing
-        uint_char(save->dt*(save->n_fields+save->n_missing-1), sec4+51);        // processing number
-        sec4[55] = save->dt_unit;                                               // time step
-        uint_char(save->dt, sec4+56);
-    }
-
-
     else {
 	fatal_error_i("ave with pdt %d is not supported",pdt);
     }
@@ -379,9 +321,8 @@ int f_ave(ARG2) {
 	pdt = GB2_ProdDefTemplateNo(sec);
 
 if (mode == 98) fprintf(stderr,"ave: pdt=%d\n",pdt);
-	// only support pdt == 0, 1, 2, 8, 12
-	// if (pdt != 0 && pdt != 1 && pdt != 8) return 0;
-	if (pdt != 0 && pdt != 1 && pdt != 2 && pdt != 8 && pdt != 12) return 0;
+	// only support pdt == 0 and pdt == 8
+	if (pdt != 0 && pdt != 1 && pdt != 8) return 0;
 
 	// first time through .. save data and return
 

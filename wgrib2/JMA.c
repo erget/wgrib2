@@ -26,7 +26,7 @@ int f_JMA(ARG0) {
 	sprintf(inv_out,"site=%c%c%c%c", sec[4][24], sec[4][25], sec[4][26], sec[4][27]);
 	inv_out += strlen(inv_out);
 	if (mode >= 1) {
-	    sprintf(inv_out,":site_id#=%u", uint2(sec[4]+28));
+	    sprintf(inv_out,":site_id#=%d", uint2(sec[4]+28));
 	    inv_out += strlen(inv_out);
 
 	    sprintf(inv_out,":site_lon=%lf:site_lat=%lf:site_elev=%.1lfm",int4(sec[4]+18)*1e-6,
@@ -36,7 +36,7 @@ int f_JMA(ARG0) {
 	    sprintf(inv_out,":mag_dec=%.2fdeg", int2(sec[4]+30)*0.001);
 	    inv_out += strlen(inv_out);
 
-	    sprintf(inv_out,":freq=%ukHz", uint4(sec[4]+32));
+	    sprintf(inv_out,":freq=%dkHz", uint4(sec[4]+32));
 	    inv_out += strlen(inv_out);
 	    sprintf(inv_out,":pol=%d:opn_mode=%d:reflec=%d", (int) sec[4][36], (int) sec[4][37], (int) sec[4][38]);
 	    inv_out += strlen(inv_out);

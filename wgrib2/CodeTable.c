@@ -16,7 +16,6 @@
  * 1/2008 S. Varlamov fixed to code_table_5.5
  * 5/2013 W. Ebisuzaki fixed code table 0.0 in response to error report M. Foster
  * 7/2013 W. Ebisuzaki added more *_location() functions, needed by set_pdt()
- * 5/2013 G. Schnee add case for DRT 5.42
  */
 
 /*
@@ -549,9 +548,9 @@ unsigned char *code_table_4_1_location(unsigned char **sec) {
 
     p = GB2_ProdDefTemplateNo(sec);
     center = GB2_Center(sec);
-    if (p <= 15 || p == 20 || (p >= 30 && p <= 34) || (p >= 40 && p <= 48) || (p >= 50 && p <= 52) || 
-           p == 57 || p == 60 || p == 61 || p == 91 ||
-           p == 254 || (p >= 1000 && p <= 1002) || p == 1100 || p == 1101) return sec[4]+ 9;
+    if (p <= 15 || p == 20 || (p >= 30 && p <= 34) || (p >= 40 && p <= 52) || (p >= 55 && p <= 61) || 
+           (p >= 67 && p <= 68) || p == 91 || p == 254 ||
+           (p >= 1000 && p <= 1002) || p == 1100 || p == 1101) return sec[4]+ 9;
     if ((center == JMA1) || (center == JMA2)) {
         if (p == 50000 || p == 50008 || p == 50009 || p == 50010 || p == 50011 || p == 50020 
 	    || p == 51020 || p == 51021 || p == 51022 || p == 52020)
@@ -583,9 +582,9 @@ unsigned char *code_table_4_2_location(unsigned char **sec) {
 
     p = GB2_ProdDefTemplateNo(sec);
     center = GB2_Center(sec);
-    if (p <= 15 || p == 20 || (p >= 30 && p <= 34) || (p >= 40 && p <= 48) ||  (p >= 50 && p <= 52) || 
-           p == 57 || p == 60 || p == 61 || p == 91 ||
-           p == 254 || (p >= 1000 && p <= 1002) || p == 1100 || p == 1101) 
+    if (p <= 15 || p == 20 || (p >= 30 && p <= 34) || (p >= 40 && p <= 52) ||  (p >= 55 && p <= 61) || 
+           (p >= 67 && p <= 68) || p == 91 || p == 254 ||
+           (p >= 1000 && p <= 1002) || p == 1100 || p == 1101) 
     if (p == 50008 && ((center == JMA1) || (center == JMA2))) return sec[4] + 10;
     if ((center == JMA1) || (center == JMA2)) {
         if (p == 50000 || p == 50008 || p == 50009 || p == 50010 || p == 50011 || p == 50020 
@@ -623,7 +622,7 @@ int code_table_4_3(unsigned char **sec) {
 }
 
 unsigned char *code_table_4_3_location(unsigned char **sec) {
-    int pdt, center, n;
+    int pdt, center;
 
     pdt =  GB2_ProdDefTemplateNo(sec);
     center = GB2_Center(sec);
@@ -650,7 +649,6 @@ unsigned char *code_table_4_3_location(unsigned char **sec) {
     case 32:
     case 33:
     case 34:
-    case 47:
     case 60:
     case 61:
     case 1000:
@@ -665,17 +663,30 @@ unsigned char *code_table_4_3_location(unsigned char **sec) {
     case 43:
         return sec[4]+13; break;
     case 44:
-    case 45:
-    case 46:
         return sec[4]+24; break;
     case 48:
-        return sec[4]+35; break;
+    case 49:
+        return sec[4]+35; break;        
     case 52:
         return sec[4]+13; break;
+    case 55:
+    case 56:
+        return sec[4]+17; break;
     case 57:
-	n = number_of_mode(sec);
-	if (n <= 0 || n == 65535) fatal_error_i("PDT 4.57 bad number of mode %d", n);
-	return sec[4]+20+5*n; break;
+    case 58:
+    case 67:
+    case 68:
+    {
+      	unsigned int Np = (unsigned int)*(sec[4]+19); /* number of parameters */
+      	unsigned int totalSize = GB2_Sec4_size(sec);
+      	unsigned int offset = 20+Np*5;
+        if( Np >= 0 && offset < totalSize)
+      	    return sec[4]+offset;
+      	else
+      	    return NULL;
+    }
+    case 59:
+        return sec[4]+17; break;
     case 50000:
     case 50008:
     case 50009:
@@ -697,7 +708,7 @@ unsigned char *code_table_4_3_location(unsigned char **sec) {
 }
 
 /*
- * HEADER:-1:code_table_4.4:inv:0:code table 4.4  (first)
+ * HEADER:-1:code_table_4.4:inv:0:code table 4.4
  */
 int f_code_table_4_4(ARG0) {
     int val;
@@ -720,7 +731,7 @@ int code_table_4_4(unsigned char **sec) {
     return (int) *p;
 }
 unsigned char *code_table_4_4_location(unsigned char **sec) {
-    int pdt, center, n;
+    int pdt, center;
     pdt = GB2_ProdDefTemplateNo(sec);
     center = GB2_Center(sec);
 
@@ -764,15 +775,30 @@ unsigned char *code_table_4_4_location(unsigned char **sec) {
 	return sec[4] + 30;
 	break;
     case 48:
+    case 49:
 	return sec[4] + 41;
 	break;
     case 52:
 	return sec[4] + 20;
 	break;
+    case 55:
+    case 56:
+    	return sec[4] + 23;
     case 57:
-        n = number_of_mode(sec);
-        if (n <= 0 || n == 65535) fatal_error_i("PDT 4.57 bad number of mode %d", n);
-        return sec[4]+26+5*n; break;
+    case 58:
+    case 67:
+    case 68:
+    {
+    	unsigned int Np = (unsigned int)*(sec[4]+19); /* number of parameters */
+    	unsigned int totalSize = GB2_Sec4_size(sec);
+    	unsigned int offset = 26+Np*5;
+    	if( Np >= 0 && offset < totalSize)
+    		return sec[4]+offset;
+    	else
+    		return NULL;
+    }
+    case 59:
+        return sec[4] + 23;
     case 50008:
 	if (center == JMA1 || center == JMA2) return sec[4]+17;
 	return NULL;
@@ -815,7 +841,7 @@ int code_table_4_5a(unsigned char **sec) {
     return (int) *p;
 }
 unsigned char *code_table_4_5a_location(unsigned char **sec) {
-    int pdt, center, n;
+    int pdt, center;
     pdt = GB2_ProdDefTemplateNo(sec);
     center = GB2_Center(sec);
 
@@ -852,10 +878,8 @@ unsigned char *code_table_4_5a_location(unsigned char **sec) {
     case 13:
     case 14:
     case 15:
-    case 51:
     case 60:
     case 61:
-    case 91:
     case 1100:
     case 1101:
          return sec[4]+22; break;
@@ -866,18 +890,29 @@ unsigned char *code_table_4_5a_location(unsigned char **sec) {
         return sec[4]+24; break;
     case 44:
         return sec[4]+33; break;
-    case 45:
-    case 46:
-    case 47:
-        return sec[4]+35; break;
     case 48:
+    case 49:
         return sec[4]+46; break;
     case 52: // validation
         return sec[4]+25; break;
+    case 55:
+    case 56:
+    	return sec[4]+28; break;
     case 57:
-        n = number_of_mode(sec);
-        if (n <= 0 || n == 65535) fatal_error_i("PDT 4.57 bad number of mode %d", n);
-        return sec[4]+31+5*n; break;
+    case 58:
+    case 67:
+    case 68:
+    {
+    	unsigned int Np = (unsigned int)*(sec[4]+19); /* number of parameters */
+    	unsigned int totalSize = GB2_Sec4_size(sec);
+    	unsigned int offset = 31+Np*5;
+    	if( Np >= 0 && offset < totalSize)
+    		return sec[4]+offset;
+    	else
+    		return NULL;
+    }
+    case 59:
+        return sec[4]+28; break;        
     case 20:
     case 30:
     case 31:
@@ -913,7 +948,7 @@ int code_table_4_5b(unsigned char **sec) {
     return *p;
 }
 unsigned char *code_table_4_5b_location(unsigned char **sec) {
-    int pdt, center, n;
+    int pdt, center;
     pdt = GB2_ProdDefTemplateNo(sec);
     center = GB2_Center(sec);
 
@@ -949,10 +984,8 @@ unsigned char *code_table_4_5b_location(unsigned char **sec) {
     case 13:
     case 14:
     case 15:
-    case 51:
     case 60:
     case 61:
-    case 91:
     case 1100:
     case 1101:
         return sec[4]+28; break;
@@ -963,18 +996,29 @@ unsigned char *code_table_4_5b_location(unsigned char **sec) {
         return sec[4]+30; break;
     case 44:
         return sec[4]+39; break;
-    case 45:
-    case 46:
-    case 47:
-        return sec[4]+41; break;
     case 48:
+    case 49:
         return sec[4]+52; break;
     case 52: 
         return NULL; break;
+    case 55:
+    case 56:
+    	return sec[4]+34; break;
     case 57:
-        n = number_of_mode(sec);
-        if (n <= 0 || n == 65535) fatal_error_i("PDT 4.57 bad number of mode %d", n);
-        return sec[4]+37+5*n; break;
+    case 58:
+    case 67:
+    case 68:
+        {
+        	unsigned int Np = (unsigned int)*(sec[4]+19); /* number of parameters */
+        	unsigned int totalSize = GB2_Sec4_size(sec);
+        	unsigned int offset = 37+Np*5;
+        	if( Np >= 0 && offset < totalSize)
+        		return sec[4]+offset;
+        	else
+        		return NULL;
+        }
+    case 59:
+        return sec[4]+34; break;
     case 20:
     case 30:
     case 31:
@@ -1018,6 +1062,17 @@ unsigned char *code_table_4_6_location(unsigned char **sec) {
 	nb = sec[4][22];
 	return sec[4]+23+11*nb;
     }
+    if (p == 49) return sec[4]+58;
+    if (p == 58 || p == 68){
+        unsigned int Np = (unsigned int)*(sec[4]+19); /* number of parameters */
+        unsigned int totalSize = GB2_Sec4_size(sec);
+        unsigned int offset = 43+Np*5;
+        if( Np >= 0 && offset < totalSize)
+            return sec[4]+offset;
+        else
+ 		    return NULL;
+    }
+    if (p == 59) return sec[4]+40;
     return NULL;
 }
 
@@ -1141,7 +1196,7 @@ unsigned char *code_table_4_9_location(unsigned char **sec) {
 
 
 /*
- * HEADER:-1:code_table_4.10:inv:0:code table 4.10 statistical processing .. first occurence
+ * HEADER:-1:code_table_4.10:inv:0:code table 4.10 statistical processing
  */
 int f_code_table_4_10(ARG0) {
     int val;
@@ -1168,30 +1223,47 @@ int code_table_4_10(unsigned char **sec) {
 }
 
 unsigned char *code_table_4_10_location(unsigned char **sec) {
-    int pdt, i;
-
-    pdt = GB2_ProdDefTemplateNo(sec);
-    if (pdt == -1) return NULL;
-
-    switch(pdt) {
-        case 8: i = 46; break;
-        case 9: i = 59; break;
-        case 10: i = 47; break;
-        case 11: i = 49; break;
-        case 12: i = 48; break;
-        case 13: i = 80; break;
-        case 14: i = 76; break;
-        case 15: i = 34; break;
-        case 42: i = 48; break;
-        case 43: i = 51; break;
-        case 1001: i = 26; break;
-        case 1002: i = 24; break;
-        case 1101: i = 38; break;
-        default: return NULL; break;
+    int val;
+    unsigned char *p;
+    val = GB2_ProdDefTemplateNo(sec);
+    switch (val) {
+        case 8: p = sec[4] + 46; break;
+        case 9: p = sec[4] + 59; break;
+        case 10: p = sec[4] + 47; break;
+        case 11: p = sec[4] + 49; break;
+        case 12: p = sec[4] + 48; break;
+        case 13: p = sec[4] + 80; break;
+        case 14: p = sec[4] + 76; break;
+        case 15: p = sec[4] + 34; break;
+        case 42: p = sec[4] + 48; break;
+        case 43: p = sec[4] + 51; break;
+        case 67:
+        {
+        	unsigned int Np = (unsigned int)*(sec[4]+19); /* number of parameters */
+        	unsigned int totalSize = GB2_Sec4_size(sec);
+        	unsigned int offset = 55+Np*5;
+        	if( Np >= 0 && offset < totalSize)
+        		return sec[4]+offset;
+        	else
+        		return NULL;
+        }
+        case 68:
+        {
+        	unsigned int Np = (unsigned int)*(sec[4]+19); /* number of parameters */
+        	unsigned int totalSize = GB2_Sec4_size(sec);
+        	unsigned int offset = 58+Np*5;
+        	if( Np >= 0 && offset < totalSize)
+        		return sec[4]+offset;
+        	else
+        		return NULL;
+        }
+        case 1001: p = sec[4] + 26; break;
+        case 1002: p = sec[4] + 24; break;
+        case 1101: p = sec[4] + 38; break;
+        default: p = NULL; break;
     }
-    return sec[4] + i;
+    return p;
 }
-
 
 
 /*
@@ -1257,6 +1329,26 @@ unsigned char *code_table_4_11_location(unsigned char **sec) {
         case 14: p = sec[4] + 77; break;
         case 42: p = sec[4] + 49; break;
         case 43: p = sec[4] + 52; break;
+        case 67:
+        {
+        	unsigned int Np = (unsigned int)*(sec[4]+19); /* number of parameters */
+        	unsigned int totalSize = GB2_Sec4_size(sec);
+        	unsigned int offset = 56+Np*5;
+        	if( Np >= 0 && offset < totalSize)
+        		return sec[4]+offset;
+        	else
+        		return NULL;
+        }
+        case 68:
+        {
+        	unsigned int Np = (unsigned int)*(sec[4]+19); /* number of parameters */
+        	unsigned int totalSize = GB2_Sec4_size(sec);
+        	unsigned int offset = 59+Np*5;
+        	if( Np >= 0 && offset < totalSize)
+        		return sec[4]+offset;
+        	else
+        		return NULL;
+        }
         case 1001: p = sec[4] + 27; break;
         case 1101: p = sec[4] + 39; break;
         default: p = NULL; break;
@@ -1287,23 +1379,14 @@ int f_code_table_4_15(ARG0) {
 }
 
 int code_table_4_15(unsigned char **sec) {
-    unsigned char *p;
-    p = code_table_4_15_location(sec);
-    if (p == NULL) return -1;
-    return (int) *p;
-}
-
-unsigned char *code_table_4_15_location(unsigned char **sec) {
-    int val;
-    unsigned char *p;
+    int val, i;
     val = GB2_ProdDefTemplateNo(sec);
     switch (val) {
-        case 15: p = sec[4]+35; break;
-        default: p = NULL; break;
+        case 15: i = sec[4][35]; break;
+        default: i = -1; break;
     }
-    return p;
+    return i;
 }
-
 
 /*
  * HEADER:-1:code_table_4.91:inv:0:code table 4.91 type of interval
@@ -1339,10 +1422,8 @@ unsigned char *code_table_4_91_location(unsigned char **sec) {
     val = GB2_ProdDefTemplateNo(sec);
     switch (val) {
         case 44:
-        case 45:
-        case 46:
-        case 48: p = sec[4] + 13; break;
-        case 47: p = sec[4] + 14; break;
+        case 48:
+        case 49: p = sec[4] + 13; break;
         default: p = NULL; break;
     }
     return p;
@@ -1381,7 +1462,8 @@ unsigned char *code_table_4_91b_location(unsigned char **sec) {
     unsigned char *p;
     val = GB2_ProdDefTemplateNo(sec);
     switch (val) {
-        case 48: p = sec[4] + 24; break;
+        case 48:
+        case 49: p = sec[4] + 24; break;
         default: p = NULL; break;
     }
     return p;
@@ -1448,11 +1530,14 @@ int code_table_4_230(unsigned char **sec) {
     val = GB2_ProdDefTemplateNo(sec);
     switch (val) {
         case 40: 
-	case 41:
-	case 42:
-	case 43:
-	case 57:
-		i = uint2(sec[4]+11); break;
+	    case 41:
+	    case 42:
+	    case 43:
+        case 57:
+        case 58:
+        case 67:
+        case 68:
+		    i = uint2(sec[4]+11); break;
         default: i = -1; break;
     }
     return i;
@@ -1482,16 +1567,18 @@ int f_code_table_4_233(ARG0) {
 
 int code_table_4_233(unsigned char **sec) {
     unsigned char *p;
+    int i;
     p = code_table_4_233_location(sec);
     if (p == NULL) return -1;
-    return (int) uint2(p);
+    i = uint2(p);
+    return i;
 }
 
 unsigned char *code_table_4_233_location(unsigned char **sec) {
     int pdt;
     pdt = GB2_ProdDefTemplateNo(sec);
-    if (pdt == 47) return sec[4]+12;
-    if (pdt >= 44 && pdt <= 48) return sec[4]+11;
+    if (pdt == 44) return sec[4]+11;
+    if (pdt == 48) return sec[4]+11;
     return  NULL;
 }
 
@@ -1520,9 +1607,11 @@ int code_table_4_235(unsigned char **sec) {
     if (pdt == 52) return sec[4][11];
     return -1;
 }
+
 /*
  * HEADER:-1:code_table_4.240:inv:0:code table 4.240 Type of distribution function
  */
+
 int f_code_table_4_240(ARG0) {
     int val;
     const char *string;
@@ -1533,6 +1622,7 @@ int f_code_table_4_240(ARG0) {
             switch(val) {
 #include "CodeTable_4.240.dat"
             }
+            fprintf(stderr,">>>>code table 4.240=%d %s", val, string);
             if (string == NULL) sprintf(inv_out,"code table 4.240=%d", val);
             else sprintf(inv_out,"code table 4.240=%d %s", val, string);
         }
@@ -1541,16 +1631,87 @@ int f_code_table_4_240(ARG0) {
 }
 
 int code_table_4_240(unsigned char **sec) {
-    unsigned char *p;
-    p = code_table_4_240_location(sec);
-    if (p == NULL) return -1;
-    return (int) uint2(p);
+    int val, i;
+    val = GB2_ProdDefTemplateNo(sec);
+    switch (val) {
+        case 57: 
+	    case 58:
+	    case 67:
+	    case 68:
+            i = uint2(sec[4]+17); break;
+    default: i = -1; break;
+    }
+    return i;
 }
 
-unsigned char *code_table_4_240_location(unsigned char **sec) {
+
+/*
+ * HEADER:-1:code_table_4.241:inv:0:code table 4.241 Tile attributes
+ */
+int f_code_table_4_241(ARG0) {
+    int val;
+    const char *string;
+    if (mode >= 0) {
+        val = code_table_4_241(sec);
+        if (val >= 0) {
+            string = NULL;
+            switch(val) {
+#include "CodeTable_4.241.dat"
+            }
+            fprintf(stderr,">>>>code table 4.241=%d %s", val, string);
+            if (string == NULL) sprintf(inv_out,"code table 4.241=%d", val);
+            else sprintf(inv_out,"code table 4.241=%d %s", val, string);
+        }
+    }
+    return 0;
+}
+
+int code_table_4_241(unsigned char **sec) {
+    unsigned char *p;
+    p = code_table_4_241_location(sec);
+    if (p == NULL) return -1;
+    return (int) *p;
+}
+
+unsigned char *code_table_4_241_location(unsigned char **sec) {
     int pdt;
     pdt = GB2_ProdDefTemplateNo(sec);
-    if (pdt == 57) return sec[4]+17;
+    if (pdt == 55 || pdt == 56 || pdt == 59) return sec[4]+16;
+    return  NULL;
+}
+
+/*
+ * HEADER:-1:code_table_4.242:inv:0:code table 4.242 Tile classification
+ */
+int f_code_table_4_242(ARG0) {
+    int val;
+    const char *string;
+    if (mode >= 0) {
+        val = code_table_4_242(sec);
+        if (val >= 0) {
+            string = NULL;
+            switch(val) {
+#include "CodeTable_4.242.dat"
+            }
+            fprintf(stderr,">>>>code table 4.242=%d %s", val, string);
+            if (string == NULL) sprintf(inv_out,"code table 4.242=%d", val);
+            else sprintf(inv_out,"code table 4.242=%d %s", val, string);
+        }
+    }
+    return 0;
+}
+
+int code_table_4_242(unsigned char **sec) {
+    unsigned char *p;
+    p = code_table_4_242_location(sec);
+    if (p == NULL) return -1;
+    return (int) *p;
+}
+
+unsigned char *code_table_4_242_location(unsigned char **sec) {
+    int pdt;
+    pdt = GB2_ProdDefTemplateNo(sec);
+    if (pdt == 55 || pdt == 56 || pdt == 59) return sec[4]+11;
     return  NULL;
 }
 
@@ -1608,7 +1769,6 @@ int code_table_5_1(unsigned char **sec) {
     case 3:
     case 40:
     case 41:
-    case 42:
         return (int) (sec[5][20]);
         break;
     default:

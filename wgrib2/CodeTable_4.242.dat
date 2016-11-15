@@ -1,0 +1,6 @@
+    case 0: string="Reserved"; break;
+    case 1: string="Land use classes according to ESA-GLOBCOVER GCV2009"; break;
+    case 2: string="Land use classes according to European Commission - Global Land Cover Project GLC2000"; break;
+    case 255: string="Missing"; break;
+
+

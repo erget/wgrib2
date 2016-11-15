@@ -310,7 +310,7 @@ int f_set(ARG2) {
 
 	i = atoi(arg2);
 	if (strcmp(arg1,"discipline") == 0 || strcmp(arg1,"table_0.0") == 0) {
-	    sec[0][6] = (unsigned char) i;
+	    sec[1][10] = (unsigned char) i;
 	    return 0;
 	}
 	if (strcmp(arg1,"local_table") == 0 || strcmp(arg1,"table_1.1") == 0) {

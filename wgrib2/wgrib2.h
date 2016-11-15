@@ -1,7 +1,6 @@
 /*
  * public domain 12/2006 wesley ebisuzaki
  *               1/2007 M. Schwarb
- *               5/2016 G. Schnee
  */
 
 #include <stdio.h>
@@ -15,10 +14,9 @@
 #define USE_NETCDF
 #endif
 
-#ifndef WGRIB2_VERSION
-#define WGRIB2_VERSION "v0.2.0.5 7/2016  Wesley Ebisuzaki, Reinoud Bokhorst, John Howard, Jaakko Hyvätti, Dusan Jovic, \
-Daniel Lee, Kristian Nilssen, Karl Pfeiffer, Pablo Romero, Manfred Schwarb, Gregor Schee, Arlindo da Silva, \
-Niklas Sondell, Sam Trahan, Sergey Varlamov"
+#ifndef VERSION
+#define WGRIB2_VERSION "v0.2.0.4 2/2016 Wesley Ebisuzaki, Reinoud Bokhorst, John Howard, Jaakko Hyvätti, Dusan Jovic, \
+Kristian Nilssen, Karl Pfeiffer, Pablo Romero, Manfred Schwarb, Arlindo da Silva, Niklas Sondell, Sergey Varlamov"
 #endif
 
 #ifndef BUILD_COMMENTS
@@ -88,7 +86,7 @@ struct ARGLIST {int fn; int i_argc;};
 enum input_dev_type {DISK, PIPE, MEM, NOT_OPEN};
 enum input_type {inv_mode, dump_mode, all_mode};
 enum output_order_type {raw,wesn,wens};
-enum output_grib_type {jpeg,ieee_packing,simple,complex1,complex2,complex3,aec};
+enum output_grib_type {jpeg,ieee_packing,simple,complex1,complex2,complex3};
 
 struct seq_file {
     enum input_dev_type file_type;
@@ -117,10 +115,6 @@ int update_sec4(unsigned char **sec, unsigned char *sec4);
 
 #define ONES	(~ (int) 0)
 
-struct full_date {
-   int year, month, day, hour, minute, second;
-};
-
 struct gribtable_s {
   int disc;   /* Section 0 Discipline                                */
   int mtab_set;    /* Section 1 Master Tables Version Number used by set_var      */
@@ -143,7 +137,6 @@ int int4_comp(unsigned const char *);
 int int2(unsigned const char *);
 int int1(unsigned const char *);
 int int_n(unsigned const char *p, int n);
-int is_missing(unsigned const char *p, int len);
 unsigned int uint_n(unsigned const char *p, int n);
 unsigned int uint4(unsigned const char *);
 unsigned int uint4_missing(unsigned const char *);
@@ -159,8 +152,6 @@ void int_char(int i, unsigned char *p);
 void uint2_char(unsigned int i, unsigned char *p);
 void int2_char(int i, unsigned char *p);
 void itoshort_a(char *string, int i);
-char *nx_str(unsigned int nx);
-char *ny_str(unsigned int ny);
 
 float ieee2flt(unsigned char *ieee);
 float ieee2flt_nan(unsigned char *ieee);
@@ -173,7 +164,6 @@ int mk_file_transient(const char *filename);
 int rewind_file(const char *filename);
 int ffclose_finished(void);
 void status_ffopen(void);
-void set_io_buffer_size(int n);
  
 unsigned char *seek_grib2(FILE *file, long int *pos, unsigned long int *len_grib,
         unsigned char *buffer, unsigned int buf_len, long int *n_bytes);
@@ -215,20 +205,15 @@ int flt2ieee(float x, unsigned char *ieee);
 int flt2ieee_nan(float x, unsigned char *ieee);
 int check_datecode(int year, int month, int day);
 int add_time(int *year, int *month, int *day, int *hour, int *minute, int *second, int dtime, int unit);
-int Add_time(struct full_date *date, int dtime, int unit);
 int add_dt(int *year, int *month, int *day, int *hour, int *minute, int *second, int dtime, int unit);
 int sub_dt(int *year, int *month, int *day, int *hour, int *minute, int *second, int dtime, int unit);
 int sub_time(int year1, int month1, int day1, int hour1, int minute1, int second1, int year0, int month0, int day0, int hour0, int minute0, int second0, int *dtime, int *unit);
 int jday(int year,int month, int day);
 int num_days_in_month(int year, int month);
 int verftime(unsigned char **sec, int *year, int *month, int *day, int *hour, int *minute, int *second);
-int Verf_time(unsigned char **sec, struct full_date *date);
 int start_ft(unsigned char **sec, int *year, int *month, int *day, int *hour, int *minute, int *second);
 int reftime(unsigned char **sec, int *year, int *month, int *day, int *hour, int *minute, int *second);
-int Ref_time(unsigned char **sec, struct full_date *date);
-
 int cmp_time(int year0, int month0, int day0, int hour0, int minute0, int second0, int year1, int month1, int day1, int hour1, int minute1, int second1);
-int Cmp_time(struct full_date *date0, struct full_date *date1);
 
 
 int is_match(const char *string);
@@ -294,9 +279,6 @@ unsigned char *code_table_4_10_location(unsigned char **sec);
 int code_table_4_11(unsigned char **sec);
 unsigned char *code_table_4_11_location(unsigned char **sec);
 int code_table_4_15(unsigned char **sec);
-unsigned char *code_table_4_15_location(unsigned char **sec);
-int code_table_4_57(unsigned char **sec);
-unsigned char *code_table_4_57_location(unsigned char **sec);
 int code_table_4_91(unsigned char **sec);
 unsigned char *code_table_4_91_location(unsigned char **sec);
 int code_table_4_91b(unsigned char **sec);
@@ -308,8 +290,12 @@ int code_table_4_233(unsigned char **sec);
 unsigned char *code_table_4_233_location(unsigned char **sec);
 int code_table_4_235(unsigned char **sec);
 unsigned char *code_table_4_235_location(unsigned char **sec);
+
 int code_table_4_240(unsigned char **sec);
-unsigned char *code_table_4_240_location(unsigned char **sec);
+int code_table_4_241(unsigned char **sec);
+unsigned char *code_table_4_241_location(unsigned char **sec);
+int code_table_4_242(unsigned char **sec);
+unsigned char *code_table_4_242_location(unsigned char **sec);
 
 int code_table_5_0(unsigned char **sec);
 int code_table_5_1(unsigned char **sec);
@@ -342,10 +328,6 @@ int stat_proc_verf_time(unsigned char **sec, int *year, int *month, int *day, in
 unsigned char *year_of_model_version_date_location(unsigned char **sec);
 int percentile_value(unsigned char **sec);
 unsigned char *percentile_value_location(unsigned char **sec);
-int number_of_mode(unsigned char **sec);
-int mode_number(unsigned char **sec);
-int smallest_pdt_len(int pdt);
-
 
 int flag_table_3_3(unsigned char **sec);
 int set_flag_table_3_3(unsigned char **sec, unsigned int flag);
@@ -368,9 +350,7 @@ int get_latlon(unsigned char **sec, double **lon, double **lat);
 void fatal_error(const char *fmt, const char *string);
 void fatal_error_ss(const char *fmt, const char *string1, const char *string2);
 void fatal_error_i(const char *fmt, const int i);
-void fatal_error_u(const char *fmt, const unsigned int i);
 void fatal_error_ii(const char *fmt, const int i, const int j);
-void fatal_error_uu(const char *fmt, const unsigned int i, const unsigned int j);
 void set_mode(int new_mode);
 int latlon_0(unsigned char **sec);
 int new_gds(unsigned char **sec);
@@ -402,7 +382,7 @@ int axes_earth(unsigned char **sec, double *major , double *minor);
 
 int unpk_grib(unsigned char **sec, float *data);
 int set_order(unsigned char **sec, enum output_order_type order);
-int swap_buffer(unsigned char *buffer, unsigned int n);
+int swap_buffer(unsigned char *buffer, int n);
 int wrt_sec(unsigned const char *sec0, unsigned const char *sec1, unsigned const char *sec2,
     unsigned const char *sec3, unsigned const char *sec4, unsigned const char *sec5,
     unsigned const char *sec6, unsigned const char *sec7, struct seq_file *file);
@@ -417,8 +397,6 @@ int jpeg_grib_out(unsigned char **sec, float *data, unsigned int ndata,
     int nx, int ny, int use_scale, int dec_scale, int bin_scale, FILE *out);
 int jpeg2000_grib_out(unsigned char **sec, float *data, unsigned int ndata, int nx, int ny, 
     int use_scale, int dec_scale, int bin_scale, int wanted_bits, int max_bits, struct seq_file *out);
-int aec_grib_out(unsigned char ** sec, float *data, unsigned int ndata, int use_scale, int dec_scale, 
-    int bin_scale, int wanted_bits, int max_bits, struct seq_file *out);
 int grib_out(unsigned char **sec, float *data, unsigned int ndata, FILE *out);
 int complex_grib_out(unsigned char **sec, float *data, unsigned int ndata,
  int use_scale, int dec_scale, int bin_scale, int wanted_bits, int max_bits,
@@ -449,9 +427,7 @@ int undo_output_order(float *data, float *data_old_order, unsigned int npnts);
 int prt_stat_tr(int mode, unsigned char **sec, char *inv_out, unsigned char *p, int n_inner);
 int wrt_time(int unit, int value, char *inv_out);
 int get_time(unsigned char *p, int *year, int *month, int *day, int *hour, int *minute, int *second);
-int Get_time(unsigned char *p, struct full_date *date);
 int save_time(int year, int month, int day, int hour, int minute, int second, unsigned char *p);
-int Save_time(struct full_date *date, unsigned char *p);
 
 int copy_sec(unsigned char **sec, unsigned char **clone_sec);
 int free_sec(unsigned char **clone_sec);
@@ -480,15 +456,10 @@ int fix_ncep_4(unsigned char **sec);
 int a2time_range(const char * string);
 const char *time_range2a(int tr);
 int normalize_time_range(int *tr, int *val);
-void simple_time_range(int *tr, int *val);
-int a2code_4_10(const char *string);
-const char *code_4_10_name(int code_4_10);
-int a2anl_fcst(const char *string);
 
 int prod_def_temp_size(unsigned char **sec);
 unsigned int cksum(unsigned char const *buf, size_t length);
 void rd_bitstream(unsigned char *p, int offset, int *u, int n_bits, int n);
-void rd_bitstream_flt(unsigned char *p, int offset, float *u, int n_bits, int n);
 void add_bitstream(int t, int n_bits);
 void add_many_bitstream(int *t, int n, int n_bits);
 void init_bitstream(unsigned char *new_bitstream);
@@ -510,12 +481,7 @@ int getExtName(unsigned char **sec, int mode, char *inv_out, char *name, char *d
 
 int mk_WxKeys(unsigned char **sec);
 const char *WxLabel(float f);
-
 int min_max_array(float *data, unsigned int n, float *min, float *max);
-int min_max_array_all_defined(float *data, unsigned int n, float *min, float *max);
-int int_min_max_array(int *data, unsigned int n, int *min, int *max);
-int delta(int *data, unsigned int n, int *min, int *max, int *first_val);
-int delta_delta(int *data, unsigned int n, int *min, int *max, int *first_val, int *second_val);
 
 int new_grid_lambertc(int nx, int ny, double ref_lon, double ref_lat,
     double true_lat1, double true_lat2, double stand_lon, double stand_lat,
@@ -529,7 +495,7 @@ int gctpc_get_latlon(unsigned char **sec, double **lon, double **lat);
 
 int gctpc_ll2xy_init(unsigned char **sec, double *grid_lon, double *grid_lat);
 int gctpc_ll2xy(int n, double *lon, double *lat, double *x, double *y);
-int gctpc_ll2i(int n, double *lon, double *lat, unsigned int *ipnt);
+int gctpc_ll2i(int n, double *lon, double *lat, int *ipnt);
 
 int proj4_get_latlon(unsigned char **sec, double **lon, double **lat);
 

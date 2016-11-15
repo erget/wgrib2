@@ -7,6 +7,7 @@
 #include "wgrib2.h"
 #include "fnlist.h"
 
+extern int use_gctpc;
 extern int latlon;
 extern double *lon, *lat;
 extern enum output_order_type output_order;

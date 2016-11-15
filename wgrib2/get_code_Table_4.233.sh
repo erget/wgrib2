@@ -41,7 +41,6 @@ fi
 cat $tmp.1 | sed -e 's=<\([a-zA-Z]*\) [^>]*>=<\1>=g' -e 's=</body>.*==' -e 's=.*<body>==' \
     -e 's=<br>==g' -e 's=<big>==g' -e 's=</big>==g' -e 's=<center>==g' -e 's=</td>==g' -e 's=</tr>==g' \
     -e 's=<b>==g' -e 's=</b>==g' \
-    -e 's=<sub>==g' -e 's=</sub>==g' \
     -e 's=</center>==g' -e 's/<span>//g' -e 's=</span>==g' -e 's=<tbody>==g' -e 's=</tbody>==g' >$tmp.2
 
 cat $tmp.2 | sed -e 's/ *</</g' -e 's=> *=>=g' | sed -e 's=.*<th>Number</th>==' -e 's=.*<th>Code Figure</th>==' -e 's=<\/table.*==' >$tmp.3

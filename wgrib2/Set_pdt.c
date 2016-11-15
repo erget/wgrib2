@@ -19,7 +19,7 @@
  */
 
 /*
- * HEADER:100:set_pdt:misc:1:makes new pdt, X=(+)PDT_number or X=(+)PDT_number:size of PDT in octets, +=copy metadata
+ * HEADER:100:set_pdt:misc:1:makes new (clean) pdt, X=PDT_number or X=PDT_number:size of PDT in octets
  */
 
 
@@ -49,8 +49,55 @@ int f_set_pdt(ARG1) {
     }
        
     if (i == 1) {	// use default PDT size
-        len = smallest_pdt_len(pdt);
-	if (len < 0) fatal_error_i("set_pdt: unsupported pdt=%d",pdt);
+
+        switch(pdt) {
+
+        case 0: len = 34; break;
+        case 1: len = 37; break;
+        case 2: len = 36; break;
+        case 3: len = 68; break;
+        case 4: len = 64; break;
+        case 5: len = 47; break;
+        case 6: len = 35; break;
+        case 7: len = 34; break;
+        case 8: len = 58; break;
+        case 9: len = 71; break;
+        case 10: len = 59; break;
+        case 11: len = 61; break;
+        case 12: len = 60; break;
+        case 13: len = 92; break;
+        case 14: len = 88; break;
+        case 15: len = 37; break;
+        case 20: len = 43; break;
+        case 30: len = 14; break;
+        case 31: len = 25; break;		// nb=1
+        case 32: len = 34; break;		// nb=1
+        case 33: len = 37; break;		// nb=1
+	case 34: len = 61; break;		// nb=1 i=1
+        case 40: len = 36; break;
+        case 41: len = 39; break;
+        case 42: len = 60; break;
+        case 43: len = 63; break;
+        case 44: len = 45; break;
+        case 45: len = 50; break;
+        case 46: len = 71; break;
+        case 47: len = 74; break;
+        case 48: len = 58; break;
+        case 51: len = 47; break;		// i=1
+        case 52: len = 31; break;		// validation
+        case 53: len = 40; break;		// np=1
+        case 54: len = 43; break;		// np=1
+        case 57: len = 43; break;		// np=1
+        case 60: len = 44; break;
+        case 61: len = 68; break;
+        case 91: len = 35; break;
+        case 254: len = 15; break;
+	case 1000: len = 22; break;
+	case 1001: len = 38; break;
+	case 1100: len = 34; break;
+	case 1101: len = 50; break;
+        default: fatal_error_i("set_pdt: unsupported pdt=%d",pdt); break;
+        }
 	len += extra_time_range;
     }
 
@@ -106,11 +153,10 @@ int f_set_pdt(ARG1) {
 	p_new = code_table_4_7_location(new_sec);
 	if (p_old != NULL && p_new != NULL) *p_new = *p_old;
 
-	/* probabilty info */
 	p_old = code_table_4_9_location(sec);
 	p_new = code_table_4_9_location(new_sec);
 	if (p_old != NULL && p_new != NULL) {
-	    for (i = -2; i < 11; i++) p_new[i] = p_old[i];
+	    for (i = 0; i < 11; i++) p_new[i] = p_old[i];
 	}
 
 	p_old = background_generating_process_identifier_location(sec);
@@ -139,11 +185,6 @@ int f_set_pdt(ARG1) {
             k = (58-34) + extra_time_range;
 	    for (i = 0; i < k; i++) p_new[i] = p_old[i];
 	}
-
-	/* percentile values */
-	p_old = percentile_value_location(sec);
-	p_new = percentile_value_location(new_sec);
-	if (p_old != NULL && p_new != NULL) *p_new = *p_old;
 
     }
     update_sec4(sec, new_sec4);

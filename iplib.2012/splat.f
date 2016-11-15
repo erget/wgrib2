@@ -111,8 +111,7 @@ C  GAUSSIAN LATITUDES
 C - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C  EQUALLY-SPACED LATITUDES INCLUDING POLES
       ELSE
-          WRITE(*,*) "SPLAT SHOULD BE CALLED WITH IDRT=4 not ", IDRT
-	  STOP 10
+         WRITE(*,*) "SPLAT SHOULD BE CALLED WITH IDRT=4 not ", IDRT
       ENDIF
 C - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       RETURN

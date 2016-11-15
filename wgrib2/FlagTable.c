@@ -230,7 +230,7 @@ unsigned char *flag_table_3_5_location(unsigned char **sec) {
         case 31: return gds+63; break;
         case 110: return gds+55; break;
 	case 40110:
-	    if ((center == JMA1) || (center == JMA2)) return gds+55;
+	    if ((center == JMA1) || (center == JMA2)) return gds+55; break;
 	    break;
 	default: break;
     }

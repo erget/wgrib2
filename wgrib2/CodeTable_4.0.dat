@@ -15,6 +15,14 @@
     case 14: string="Derived forecasts based on a cluster of ensemble members over a circular area at a horizontal level or in a horizontal layer, in a continuous or non-continuous time interval."; break;
     case 20: string="Radar product"; break;
     case 30: string="Satellite product"; break;
+    case 49: string="Individual ensemble forecast, control and perturbed, at a horizontal level or horizontal layer at point in time for optical properties of aerosol"; break;
+    case 55: string="Spatio-temporal changing tiles at a horizontal level or horizontal layer at point in time"; break;
+    case 56: string="*DEPRECATED* Individual ensemble forecast, control and perturbed, at a horizontal level or horizontal layer at point in time for spatio-temporal changing tiles"; break;
+    case 57: string="Analysis or forecast at a horizontal level or in a horizontal layer at a point in time for atmospheric chemical constituents based on a distribution function"; break;
+    case 58: string="Individual ensemble forecast, control and perturbed, at a horizontal level or in a horizontal layer at point in time for chemical constituents based on a distribution function"; break;
+    case 59: string="Individual ensemble forecast, control and perturbed, at a horizontal level or horizontal layer at point in time for spatio-temporal changing tiles"; break;
+    case 67: string="Average, accumulation and/or extreme values or other statistically processed values at a horizontal evel or in a horizontal layer in a continuous or non-continuous time interval for atmospheric chemical constituents based on a distribution function"; break;
+    case 68: string="Individual ensemble forecast, control and perturbed, at a horizontal evel or in a horizontal layer in a continuous or non-continuous time interval for atmospheric chemical constituents based on a distribution function"; break;
     case 254: string="CCITT IA5 character string"; break;
     case 1000: string="Cross-section of analysis and forecast at a point in time."; break;
     case 1001: string="Cross-section of averaged or otherwise statistically processed analysis or forecast over a range of time."; break;

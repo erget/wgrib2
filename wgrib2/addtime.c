@@ -49,13 +49,6 @@ int add_time(int *year, int *month, int *day, int *hour, int *minute, int *secon
      return sub_dt(year, month, day, hour, minute, second, -dtime, unit);
 }
 
-int Add_time(struct full_date *date, int dtime, int unit) {
-     if (dtime == 0) return 0;
-     if (dtime > 0) 
-       return add_dt(&(date->year), &(date->month), &(date->day), &(date->hour), &(date->minute), &(date->second), dtime, unit);
-     return sub_dt(&(date->year), &(date->month), &(date->day), &(date->hour), &(date->minute), &(date->second), -dtime, unit);
-}
-
 int add_dt(int *year, int *month, int *day, int *hour, int *minute, int *second, 
    int dtime, int unit) {
 
@@ -322,22 +315,6 @@ int get_time(unsigned char *p, int *year, int *month, int *day, int *hour, int *
 }
 
 /*
-   This routine reads year/month/day.../second byte code and saves it in struct full_date
- */
-
-int Get_time(unsigned char *p, struct full_date *date) {
-    date->year = (p[0] << 8) | p[1];
-    date->month = p[2];
-    date->day = p[3];
-    date->hour = p[4];
-    date->minute = p[5];
-    date->second = p[6];
-    return 0;
-}
-
-
-
-/*
    inverse of get_time .. save time code in PDS
  */
 
@@ -352,23 +329,6 @@ int save_time(int year, int month, int day, int hour, int minute, int second, un
     *p++ = (unsigned char) second;
     return 0;
 }
-
-/*
-   inverse of get_time .. save struct *full_date  in PDS
- */
-
-int Save_time(struct full_date *date, unsigned char *p) {
-
-    *p++ = (unsigned char) (date->year >> 8) & 255;
-    *p++ = (unsigned char) date->year & 255;
-    *p++ = (unsigned char) date->month;
-    *p++ = (unsigned char) date->day;
-    *p++ = (unsigned char) date->hour;
-    *p++ = (unsigned char) date->minute;
-    *p++ = (unsigned char) date->second;
-    return 0;
-}
-
 
 /*
    compare two time codes: return -1 : 0 : 1
@@ -393,28 +353,3 @@ int year1, int month1, int day1, int hour1, int minute1, int second1) {
 	return 0;
 }
 
-/*
-   compare two time codes: return -1 : 0 : 1
- */
-int Cmp_time(struct full_date *date0, struct full_date *date1) {
-
-	if (date0->year < date1->year) return -1;
-	if (date0->year > date1->year) return  1;
-
-	if (date0->month < date1->month) return -1;
-	if (date0->month > date1->month) return  1;
-
-	if (date0->day < date1->day) return -1;
-	if (date0->day > date1->day) return  1;
-
-	if (date0->hour < date1->hour) return -1;
-	if (date0->hour > date1->hour) return  1;
-
-	if (date0->minute < date1->minute) return -1;
-	if (date0->minute > date1->minute) return  1;
-
-	if (date0->second < date1->second) return -1;
-	if (date0->second > date1->second) return  1;
-
-	return 0;
-}

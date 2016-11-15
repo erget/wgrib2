@@ -43,7 +43,7 @@ extern enum output_order_type output_order;
 
 
 /*
- * HEADER:100:gctpc:misc:1: X=0,1 use gctpc library  (default=1)
+ * HEADER:100:gctpc:misc:1: X=0,1 use gctpc library (testing)
  */
 
 int f_gctpc(ARG1) {
@@ -286,7 +286,7 @@ int gctpc_get_latlon(unsigned char **sec, double **lon, double **lat) {
     if (stagger(sec, nnpnts, llon, llat)) fatal_error("gctpc: stagger problem","");
 
 //    printf(">> stagger gctpc x00 %lf y00 %lf\n",llon[0], llat[0]);
-#pragma omp parallel for private(i)
+#pragma omp parallel for schedule(static) private(i)
     for (i = 0; i < nnpnts; i++) {
         inv_fn(llon[i]*dx, llat[i]*dy, llon+i, llat+i);
 	llat[i] *= (180.0 / M_PI);
@@ -298,7 +298,7 @@ int gctpc_get_latlon(unsigned char **sec, double **lon, double **lat) {
 
 
 /*
- * HEADER:100:ll2ij:inv:2:x=lon y=lat, converts lon-lat to (i,j) using gctpc
+ * HEADER:100:ll2ij:inv:2:x=lon y=lat, converts lon-lat (i,j) 
  */
 int f_ll2ij(ARG2) {
 
@@ -309,7 +309,7 @@ int f_ll2ij(ARG2) {
 	latlon = 1;
     }
     if (mode >= 0) {
-	if (output_order != wesn) return 1;
+	if (output_order != wesn)  return 1;
 	to_lon[0] = atof(arg1);
 	to_lat[0] = atof(arg2);
         i = gctpc_ll2xy_init(sec, lon, lat);
@@ -322,13 +322,12 @@ int f_ll2ij(ARG2) {
 }
 
 /*
- * HEADER:100:ll2i:inv:2:x=lon y=lat, converts to (i), 1..ndata
+ * HEADER:100:ll2i:inv:2:x=lon y=lat, converts to (i)
  */
 int f_ll2i(ARG2) {
 
     double to_lat[1], to_lon[1];
-    int i;
-    unsigned int iptr;
+    int i, iptr;
 
     if (mode == -1) {
         latlon = 1;
@@ -338,14 +337,10 @@ int f_ll2i(ARG2) {
         to_lon[0] = atof(arg1);
         to_lat[0] = atof(arg2);
         i = gctpc_ll2xy_init(sec, lon, lat);
-	if (i != 0) {
-	    iptr = 0;	
-	}
-	else {
+        if (i == 0)  {
             i = gctpc_ll2i(1, to_lon, to_lat, &iptr);
-	    if (i != 0) iptr = 0;
-	}
-        sprintf(inv_out,"%lf %lf -> (%u)",to_lon[0], to_lat[0], iptr);
+            sprintf(inv_out,"%lf %lf -> (%d)",to_lon[0], to_lat[0], iptr);
+        }
     }
     return 0;
 }

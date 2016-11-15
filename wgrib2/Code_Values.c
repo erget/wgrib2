@@ -6,8 +6,6 @@
 #include "fnlist.h"
 
 /*
- * 2016 Public Domain Wesley Ebisuzaki
- *
  * this file contains nice to know values 
  */
 
@@ -19,7 +17,7 @@ int f_pds_fcst_time(ARG0) {
 
     if (mode >= 0 && code_table_4_4_location(sec)) {
         p = forecast_time_in_units(sec);
-	sprintf(inv_out,"pds_fcst_time1=%d", p);
+	sprintf(inv_out,"pds_fcst_time1=%u", p);
     }
     return 0;
 }
@@ -38,25 +36,48 @@ unsigned char *number_of_forecasts_in_the_ensemble_location(unsigned char **sec)
 
     pdt = code_table_4_0(sec);
     switch(pdt) {
-	case 1:
-	case 11:
-        case 60:
-        case 61:
-		p = sec[4]+36; break;
-	case 2:
-	case 3:
-	case 4:
-	case 12:
-	case 13:
-		p = sec[4]+35; break;
-	case 33:
-	case 34:
-		nb = sec[4][22];
-		p = sec[4] + 25 + 11*nb; break;
-	case 41:
-	case 43:
-		p = sec[4]+38; break;
-	default: p=NULL; break;
+    case 1:
+    case 11:
+    case 60:
+    case 61:
+    	p = sec[4]+36; break;
+    case 2:
+    case 3:
+    case 4:
+    case 12:
+    case 13:
+    	p = sec[4]+35; break;
+    case 33:
+    case 34:
+    	nb = sec[4][22];
+    	p = sec[4] + 25 + 11*nb; break;
+    case 41:
+    case 43:
+    	p = sec[4]+38; break;
+    case 49:
+    	p = sec[4]+60; break;
+    case 58:
+    case 68:
+    {
+    	unsigned int Np = (unsigned int)*(sec[4]+19); /* number of parameters */
+    	unsigned int totalSize = GB2_Sec4_size(sec);
+    	unsigned int offset = 45+Np*5;
+    	if( Np >= 0 && offset < totalSize)
+    		return sec[4]+offset;
+    	else
+    		return NULL;
+    }
+    case 59:
+    {
+    	unsigned int Np = (unsigned int)*(sec[4]+19); /* number of parameters */
+    	unsigned int totalSize = GB2_Sec4_size(sec);
+    	unsigned int offset = 42+Np*5;
+    	if( Np >= 0 && offset < totalSize)
+    		return sec[4]+offset;
+    	else
+    		return NULL;
+    }
+    default: p=NULL; break;
     }
     return p;
 }
@@ -74,19 +95,42 @@ unsigned char *perturbation_number_location(unsigned char **sec) {
 
     pdt = code_table_4_0(sec);
     switch(pdt) {
-	case 1:
-	case 11:
-	case 60:
-	case 61:
-		p = sec[4]+35; break;
-	case 33:
-	case 34:
-		nb = sec[4][22];
-		p = sec[4] + 24 + 11*nb; break;
-	case 41:
-	case 43:
-		p = sec[4]+37; break;
-	default: p = NULL; break;
+    case 1:
+    case 11:
+    case 60:
+    case 61:
+    	p = sec[4]+35; break;
+    case 33:
+    case 34:
+    	nb = sec[4][22];
+    	p = sec[4] + 24 + 11*nb; break;
+    case 41:
+    case 43:
+    	p = sec[4]+37; break;
+    case 49:
+    	p = sec[4]+59; break;
+    case 58:
+    case 68:
+    {
+    	unsigned int Np = (unsigned int)*(sec[4]+19); /* number of parameters */
+    	unsigned int totalSize = GB2_Sec4_size(sec);
+    	unsigned int offset = 44+Np*5;
+    	if( Np >= 0 && offset < totalSize)
+    		return sec[4]+offset;
+    	else
+    		return NULL;
+    }
+    case 59:
+    {
+    	unsigned int Np = (unsigned int)*(sec[4]+19); /* number of parameters */
+    	unsigned int totalSize = GB2_Sec4_size(sec);
+    	unsigned int offset = 41+Np*5;
+    	if( Np >= 0 && offset < totalSize)
+    		return sec[4]+offset;
+    	else
+    		return NULL;
+    }
+    default: p = NULL; break;
     }
     return p;
 }
@@ -176,9 +220,6 @@ unsigned char *background_generating_process_identifier_location(unsigned char *
     if ( (p >= 40 && p <= 43) )
         return sec[4]+14;
     if ( p == 44 ) return sec[4]+25;
-    if ( p == 45 ) return sec[4]+25;
-    if ( p == 46 ) return sec[4]+25;
-    if ( p == 47 ) return sec[4]+25;
     if ( p == 48 ) return sec[4]+36;
     if ( p == 52 ) return sec[4]+15;
     return NULL;
@@ -213,8 +254,7 @@ unsigned char *analysis_or_forecast_generating_process_identifier_location(unsig
         return sec[4]+13;
     if ( (p >= 40 && p <= 43) )
         return sec[4]+15;
-    if (p >= 44 && p <= 47) return sec[4]+26;
-    if (p == 48) return sec[4]+37;
+    if ( p == 48 ) return sec[4]+37;
     if ( p == 52 ) return sec[4]+16;
     return NULL;
 }
@@ -231,7 +271,7 @@ unsigned char *hours_of_observational_data_cutoff_after_reference_time_location(
     p = GB2_ProdDefTemplateNo(sec);
     if (p <= 15 || (p >= 32 && p <= 34) || p == 60 || p == 61 || p == 1000 || p == 1001 || p == 1002 || p == 1100 || p == 1101)
         return sec[4]+14;
-    if (p >= 44 && p <= 47) return sec[4]+27;
+    if ( p == 44 ) return sec[4]+27;
     if ( p == 48 ) return sec[4]+38;
     return NULL;
 }
@@ -248,7 +288,7 @@ unsigned char *minutes_of_observational_data_cutoff_after_reference_time_locatio
     p = GB2_ProdDefTemplateNo(sec);
     if (p <= 15 || (p >= 32 && p <= 34) || p == 60 || p == 61 || p == 1000 || p == 1001 || p == 1002 || p == 1100 || p == 1101)
         return sec[4]+16;
-    if (p >= 44 && p <= 47) return sec[4]+29;
+    if ( p == 44 ) return sec[4]+29;
     if ( p == 48 ) return sec[4]+40;
     return NULL;
 }
@@ -427,7 +467,7 @@ int scaling(unsigned char **sec, double *ref_value, int *decimal_scaling, int *b
 
     pack = (int) code_table_5_0(sec);
     p = sec[5];
-    if (pack == 0 || pack == 1 || pack == 2 || pack == 3 || pack == 40 || pack == 41 || pack == 42 ||
+    if (pack == 0 || pack == 1 || pack == 2 || pack == 3 || pack == 40 || pack == 41 ||
                 pack == 50 || pack == 51 || pack == 61 || pack == 40000 || pack == 40010) {
        *ref_value = ieee2flt(p+11);
        *binary_scaling = int2(p+15);
@@ -440,81 +480,3 @@ int scaling(unsigned char **sec, double *ref_value, int *decimal_scaling, int *b
     return 0;
 }
 
-/*
- * returns number of particle size distributions used by template 4.57
- */
-int number_of_mode(unsigned char **sec) {
-    int pdt;
-    pdt = code_table_4_0(sec);
-    if (pdt == 57) return (int) uint2(sec[4]+13);
-    return -1;
-}
-
-/*
- * returns partical size distribution (mode)  1..number_of_mode for template 4.57
- */
-
-int mode_number(unsigned char **sec) {
-    int pdt;
-    pdt = code_table_4_0(sec);
-    if (pdt == 57) return (int) uint2(sec[4]+15);
-    return -1;
-}
-
-
-/*
- * returns the length of the PDT (smallest)
- */
-
-int smallest_pdt_len(int pdt) {
-    int len;
-    switch(pdt) {
-
-    case 0: len = 34; break;
-    case 1: len = 37; break;
-    case 2: len = 36; break;
-    case 3: len = 68; break;
-    case 4: len = 64; break;
-    case 5: len = 47; break;
-    case 6: len = 35; break;
-    case 7: len = 34; break;
-    case 8: len = 58; break;
-    case 9: len = 71; break;
-    case 10: len = 59; break;
-    case 11: len = 61; break;
-    case 12: len = 60; break;
-    case 13: len = 92; break;
-    case 14: len = 88; break;
-    case 15: len = 37; break;
-    case 20: len = 43; break;
-    case 30: len = 14; break;
-    case 31: len = 25; break;    	// nb=1
-    case 32: len = 34; break;    	// nb=1
-    case 33: len = 37; break;    	// nb=1
-    case 34: len = 61; break;		// nb=1 i=1
-    case 40: len = 36; break;
-    case 41: len = 39; break;
-    case 42: len = 60; break;
-    case 43: len = 63; break;
-    case 44: len = 45; break;
-    case 45: len = 50; break;
-    case 46: len = 71; break;
-    case 47: len = 74; break;
-    case 48: len = 58; break;
-    case 51: len = 47; break;    	// i=1
-    case 52: len = 31; break;    	// validation
-    case 53: len = 40; break;    	// np=1
-    case 54: len = 43; break;    	// np=1
-    case 57: len = 43; break;    	// np=1
-    case 60: len = 44; break;
-    case 61: len = 68; break;
-    case 91: len = 35; break;
-    case 254: len = 15; break;
-    case 1000: len = 22; break;
-    case 1001: len = 38; break;
-    case 1100: len = 34; break;
-    case 1101: len = 50; break;
-    default: len = -1; break;
-    }
-    return len;
-}

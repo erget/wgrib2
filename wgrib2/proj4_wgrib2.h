@@ -10,12 +10,12 @@ struct proj4_struct {
     projPJ pj_grid, pj_latlon;
 };
 
-int proj4_init(unsigned char **sec, double *grid_lon, double *grid_lat);
+int proj4_init(unsigned char **sec);
 int proj4_initialize(unsigned char **sec, struct proj4_struct *projection);
 int proj4_ll2xy(struct proj4_struct *projection, int n, double *lon, double *lat, double *x, double *y);
 int Proj4_ll2xy(int n, double *lon, double *lat, double *x, double *y);
 
-int Proj4_ll2i(int n, double *lon, double *lat, unsigned int *ipnt);
+int Proj4_ll2i(int n, double *lon, double *lat, int *ipnt);
 int Proj4_ij2ll(unsigned char **sec, int n, double *x, double *y, double *lon, double *lat);
 int proj4_xy2ll(struct proj4_struct *projection, int n, double *x, double *y, double *lon, double *lat);
 int Proj4_xy2ll(int n, double *x, double *y, double *lon, double *lat);

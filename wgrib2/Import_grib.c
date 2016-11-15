@@ -66,7 +66,7 @@ int f_import_grib(ARG1) {
         get_nxny(save->sec, &nx, &ny, &npnts, &res, &scan);
 
         if (npnts != ndata) 
-             fatal_error_uu("import_grib: size mismatch (%u/%u)", npnts, ndata); 
+             fatal_error_ii("import_grib: size mismatch (%d/%d)", npnts, ndata); 
 
         if (use_g2clib != 0 && use_g2clib != 1)
              fatal_error_i("import_grib: only g2clib = 0 or 1 supported (%d)", use_g2clib);

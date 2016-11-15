@@ -9,9 +9,6 @@
 
 /*
  * use this routine to update sec4/pdt
- * NOTE: update_sec4 assumes that sec4 will be used and no longer used
- * before it is called again.
- * NOT thread safe, can only be used for one **sec
  *
  * 10/2013 Public Domain by Wesley Ebisuzaki
  */

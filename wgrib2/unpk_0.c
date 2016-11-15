@@ -3,12 +3,6 @@
 #include <limits.h>
 #include "wgrib2.h"
 
-#ifdef USE_OPENMP
-#include <omp.h>
-#else
-#define omp_get_num_threads()		1
-#endif
-
 /* 1996				wesley ebisuzaki
  *
  * Unpack BDS section
@@ -29,11 +23,10 @@
  *             Luis Kornblueh, MPIfM 
  * 7/06 v.1.2.4 fixed some bug complex packed data was not set to undefined
  * 10/15 v.1.2.5 changed n and i to unsigned
- * 3/16 v.1.2.6 OpenMP
- * 6/16 v.1.2.7 faster OpenMP and optimization
  */
 
 static unsigned int mask[] = {0,1,3,7,15,31,63,127,255};
+static unsigned int map_masks[8] = {128, 64, 32, 16, 8, 4, 2, 1};
 static double shift[9] = {1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0, 256.0};
 
 void unpk_0(float *flt, unsigned char *bits0, unsigned char *bitmap0,
@@ -41,8 +34,8 @@ void unpk_0(float *flt, unsigned char *bits0, unsigned char *bitmap0,
 
     unsigned char *bits, *bitmap;
 
-    int c_bits, j_bits, nthreads;
-    unsigned int map_mask, bbits, i, j, k, n_missing, ndef, di;
+    int mask_idx, t_bits, c_bits, j_bits;
+    unsigned int j, map_mask, tbits, jmask, bbits, i;
     double jj;
 
     ref = ref * dec_scale;
@@ -50,59 +43,44 @@ void unpk_0(float *flt, unsigned char *bits0, unsigned char *bitmap0,
     bits = bits0;
     bitmap = bitmap0;
 
-    bbits = 0;
+    tbits = bbits = 0;
 
     /* assume integer has 32+ bits */
-    /* optimized code for n_bits <= 25bits */
     if (n_bits <= 25) {
-        n_missing = bitmap ? missing_points(bitmap0, n) : 0;
-	ndef = n - n_missing;
+        jmask = (1 << n_bits) - 1;
+        t_bits = 0;
 
-	// 1-cpu: rd_bitstream_flt(bits0, 0, flt+n_missing, n_bits, ndef);
-	// 1-cpu: for (j = 0; j < ndef; j++) flt[j+n_missing] = ref + scale*flt[j+n_missing];
-
-#pragma omp parallel private(i,j,k)
-	{
-#pragma omp single
-	    {
-	        nthreads = omp_get_num_threads();
-	        di = (ndef + nthreads - 1) / nthreads;
-                di = ((di + 7) | 7) ^ 7;
-	    }
-#pragma omp for
-	    for (i = 0; i < ndef; i += di) {
-	        k  = ndef - i;
-	        if (k > di) k = di;
-	        rd_bitstream_flt(bits0 + (i/8)*n_bits, 0, flt+n_missing+i, n_bits, k);
-	        for (j = i+n_missing; j < i+k+n_missing; j++) {
-		    flt[j] = ref + scale*flt[j];
-	        }
-	    }
-	}
-/*
-#pragma omp parallel for private(i,j,k)
-	for (i = 0; i < ndef; i += CACHE_LINE_BITS) {
-	    k  = ndef - i;
-	    if (k > CACHE_LINE_BITS) k = CACHE_LINE_BITS;
-	    rd_bitstream_flt(bits0 + (i/8)*n_bits, 0, flt+n_missing+i, n_bits, k);
-	    for (j = i+n_missing; j < i+k+n_missing; j++) {
-		flt[j] = ref + scale*flt[j];
-	    }
-	}
-*/
-
-	if (n_missing != 0) {
-	    j = n_missing;
+        if (bitmap) {
 	    for (i = 0; i < n; i++) {
 		/* check bitmap */
-		if ((i & 7) == 0) bbits = *bitmap++;
-		if (bbits & 128) {
-		    flt[i] = flt[j++];
-		}
-		else {
-		    flt[i] = UNDEFINED;
-		}
-		bbits = bbits << 1;
+		mask_idx = i & 7;
+		if (mask_idx == 0) bbits = *bitmap++;
+	        if ((bbits & map_masks[mask_idx]) == 0) {
+		    *flt++ = UNDEFINED;
+		    continue;
+	        }
+
+	        while (t_bits < n_bits) {
+	            tbits = (tbits * 256) + *bits++;
+	            t_bits += 8;
+	        }
+	        t_bits -= n_bits;
+	        j = (tbits >> t_bits) & jmask;
+	        *flt++ = ref + scale*j;
+            }
+        }
+        else {
+	    for (i = 0; i < n; i++) {
+                while (t_bits < n_bits) {
+                    tbits = (tbits * 256) + *bits++;
+                    t_bits += 8;
+                }
+                t_bits -= n_bits;
+                flt[i] = (tbits >> t_bits) & jmask;
+            }
+	    /* at least this vectorizes :) */
+	    for (i = 0; i < n; i++) {
+		flt[i] = ref + scale*flt[i];
 	    }
         }
     }

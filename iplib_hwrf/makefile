@@ -22,8 +22,6 @@ LIB=libipolate.a
 ARFLAGS=-ruv
 
 # FFLAGS=-O2
-FC=gfortran
-
 objs=gausslat.o gcdist.o gdsawt.o gdswiz00.o gdswiz01.o gdswiz03.o gdswiz04.o gdswiz05.o \
 gdswizc9.o gdswizca.o gdswizcb.o gdswiz.o gdswzd00.o gdswzd01.o gdswzd03.o gdswzd04.o \
 gdswzd05.o gdswzdc9.o gdswzdca.o gdswzdcb.o gdswzd.o ijkgds0.o ijkgds1.o ijkgds.o ipmerge2.o \
@@ -37,7 +35,3 @@ $(LIB):	$(objs)
 
 .f.o:
 	$(FC) ${FFLAGS} -c $<
-
-clean:
-	rm junk.o
-	rm *.o

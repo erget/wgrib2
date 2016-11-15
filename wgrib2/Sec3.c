@@ -214,7 +214,7 @@ int get_nxny_(unsigned char **sec, unsigned int *nx, unsigned int *ny, unsigned 
  * HEADER:200:nxny:inv:0:nx and ny of grid
  */
 int f_nxny(ARG0) {
-    if (mode >= 0) sprintf(inv_out,"(%s x %s)",nx_str(nx_), ny_str(ny_));
+    if (mode >= 0) sprintf(inv_out,"(%ld x %ld)", nx_ == 0 ? -1l : (long) nx_, ny_ == 0 ? -1l : (long) ny_);
     return 0;
 }
 
@@ -356,7 +356,7 @@ int f_grid(ARG0) {
                 sub_ang = GDS_LatLon_sub_ang(gds);
                 units = basic_ang == 0 ?  0.000001 : (float) basic_ang / (float) sub_ang;
 
-                sprintf(inv_out,"(%s x %s)",nx_str(nx_),ny_str(ny_));
+                sprintf(inv_out,"(%d x %d)",nx,ny);
                 inv_out += strlen(inv_out);
 
                 sprintf(inv_out," units %g input %s output %s res %d%s", units, scan_order[scan>>4],output_order_name(), res,nl);
@@ -484,8 +484,8 @@ int f_grid(ARG0) {
 		}
                 break;
 
-            case 10: sprintf(inv_out,"%sMercator grid: (%s x %s) LatD %lf input %s output %s res %d%s",nl,
-                        nx_str(nx_), ny_str(ny_), GDS_Mercator_latD(gds), scan_order[scan>>4],output_order_name(),res,nl);
+            case 10: sprintf(inv_out,"%sMercator grid: (%d x %d) LatD %lf input %s output %s res %d%s",nl,
+                        nx, ny, GDS_Mercator_latD(gds), scan_order[scan>>4],output_order_name(),res,nl);
                 inv_out += strlen(inv_out);
                 lon1 = GDS_Mercator_lon1(gds);
                 lon2 = GDS_Mercator_lon2(gds);
@@ -508,8 +508,8 @@ int f_grid(ARG0) {
                 break;
 	    case 12: sprintf(inv_out,"%sTransverse Mercator grid:%s", nl, nl);
                 break;
-            case 20: sprintf(inv_out,"%spolar stereographic grid: (%s x %s) input %s output %s res %d%s",nl,
-                        nx_str(nx_), ny_str(ny_), scan_order[scan>>4],output_order_name(), res,nl);
+            case 20: sprintf(inv_out,"%spolar stereographic grid: (%d x %d) input %s output %s res %d%s",nl,
+                        nx, ny, scan_order[scan>>4],output_order_name(), res,nl);
                 inv_out += strlen(inv_out);
                 sprintf(inv_out,"%s pole ", flag_table_3_5(sec) & 128 ? "South" : "North");
                 inv_out += strlen(inv_out);
@@ -526,8 +526,8 @@ int f_grid(ARG0) {
 
                 break;
             case 30:
-                sprintf(inv_out,"%sLambert Conformal: (%s x %s) input %s output %s res %d%s",nl,
-                        nx_str(nx_), ny_str(ny_), scan_order[scan>>4],output_order_name(), res,nl);
+                sprintf(inv_out,"%sLambert Conformal: (%d x %d) input %s output %s res %d%s",nl,
+                        nx, ny, scan_order[scan>>4],output_order_name(), res,nl);
                 inv_out += strlen(inv_out);
                 dlon = GDS_Lambert_dx(gds);
 		dlat = GDS_Lambert_dy(gds);
@@ -994,7 +994,7 @@ int f_grid(ARG0) {
 		      inv_out += strlen(inv_out);
 		      lon1 = int2(gds+39)*0.01;
 		      sprintf(inv_out,"%sangle %.2f degrees clockwise from North by %s360/%d degrees", nl,lon1, 
-				(jma_scan &  64) ? "-" : "", ny);
+				jma_scan * 64 ? "-" : "", ny);
 		  }
                   break;
             default: sprintf(inv_out,"no other grid info");

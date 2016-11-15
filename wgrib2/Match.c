@@ -22,7 +22,6 @@
  *
  * 2/2008 in public domain Wesley Ebisuzaki
  * 4/2015 added egrep and egrep_v Wesley Ebisuzaki
- * 2/2016 f_match_inv: old match_inv depended on verbose mode, new: mode=0
  *
  */
 
@@ -78,7 +77,7 @@ static char *preprocess_match(const char *arg) {
 	return str;
     }
 
-    // regex_type == 2   extended regular expressions but need to quote metacharacters
+    // regex_type == 2   extended regular expressoins but need to quote metacharacters
     if (regex_type == 2) {
 	while ((c = *arg++)) {
 	   if (c == '?' || c == '+' || c == '|' || c == '.' || c == '[' || c == ']' || c == '^' || c == '$' || c == '*'
@@ -383,10 +382,8 @@ extern const char *item_deliminator;
 extern int use_ext_name;
 
 int f_match_inv(ARG0) {
-    int old_mode;
+
     if (mode >= 0) {
-        old_mode = mode;
-	mode = 0;
         f_t(call_ARG0(inv_out,NULL));
         strcat(inv_out,":");
         inv_out += strlen(inv_out);
@@ -454,8 +451,6 @@ int f_match_inv(ARG0) {
         f_vt(call_ARG0(inv_out,NULL));
         strcat(inv_out,":");
         inv_out += strlen(inv_out);
-
-        mode = old_mode;
     }
     return 0;
 }

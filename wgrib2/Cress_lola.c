@@ -200,7 +200,7 @@ fprintf(stderr,">>processing\n");
                 save->in_y[i] = c * sin(lon[i] * (M_PI / 180.0));
             }
         }
-fprintf(stderr,"done new gds processing npnts=%u\n", npnts);
+fprintf(stderr,"done new gds processing npnts=%d\n", npnts);
     }
 
     /* at this point x, y, and z of input and output grids have been made */
@@ -237,7 +237,7 @@ fprintf(stderr,"done new gds processing npnts=%u\n", npnts);
 fprintf(stderr,">>sum=%lf n %d background[1] %lf\n", sum, n, background[1]);
 
     for (iradius = 0; iradius < save->nRadius; iradius++) {
-fprintf(stderr,">>radias=%lf nxny %d npnts %u\n", save->Radius[iradius],nxny, npnts);
+fprintf(stderr,">>radias=%lf nxny %d npnts %d\n", save->Radius[iradius],nxny, npnts);
 	/* save->Radius has units of km */
 	/* normalize to a sphere of unit radius */
 	r_sq = save->Radius[iradius] / (save->R_earth / 1000.0);

@@ -50,13 +50,10 @@ int jpeg2000_grib_out(unsigned char **sec, float *data, unsigned int ndata,
  	iy = 1;
     }
 
-    if (n_defined != 0) {
-	min_max_array_all_defined(data, n_defined, &min_val,  &max_val);
+    for (max_val = min_val = data[0], j = 1; j < n_defined; j++) {
+        if (min_val > data[j]) min_val = data[j];
+        if (max_val < data[j]) max_val = data[j];
     }
-    else {
-	min_val = max_val = 0.0;
-    }
-
     ncep_min_val = min_val;
 
     if (use_scale == 0) {
@@ -90,9 +87,8 @@ int jpeg2000_grib_out(unsigned char **sec, float *data, unsigned int ndata,
 	}
 	ref = min_val;
         scale = ldexp(1.0, -bin_scale);
-//      i = (int) ( (max_val - ref)*scale + 0.5);
-//	frange = (double) i;
-        frange  = floor( (max_val - ref)*scale + 0.5);
+        i = (int) ( (max_val - ref)*scale + 0.5);
+	frange = (double) i;
         frexp(frange, &nbits);
 
         if (nbits > max_bits) {
@@ -208,6 +204,15 @@ int jpeg2000_grib_out(unsigned char **sec, float *data, unsigned int ndata,
     free(sec7);
 
     return i;
+}
+
+
+#else
+
+int jpeg2000_grib_out(unsigned char **sec, float *data, unsigned int ndata,
+  int nx, int ny, int use_scale, int dec_scale, int bin_scale, int wanted_bits,
+  int max_bits, struct seq_file *out) {
+         return 0;
 }
 
 #endif

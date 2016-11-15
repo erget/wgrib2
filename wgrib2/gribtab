@@ -984,7 +984,6 @@
 10:0:0:255:7:1:3:200:SSST:Surface Salinity Trend:psuperday
 10:0:0:255:7:1:3:201:KENG:Kinetic Energy:J/kg
 10:0:0:255:7:1:3:202:SLTFL:Salt Flux:kg/m^2/s
-10:0:0:255:7:1:3:203:CH:Heat Exchange Coefficient:-
 10:0:0:255:7:1:3:242:TCSRG20:20% Tropical Cyclone Storm Surge Exceedance:m
 10:0:0:255:7:1:3:243:TCSRG30:30% Tropical Cyclone Storm Surge Exceedance:m
 10:0:0:255:7:1:3:244:TCSRG40:40% Tropical Cyclone Storm Surge Exceedance:m

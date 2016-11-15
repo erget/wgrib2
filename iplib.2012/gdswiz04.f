@@ -63,6 +63,7 @@ C$$$
       PARAMETER(PI=3.14159265358979,DPR=180./PI)
       REAL, ALLOCATABLE :: ALAT(:),ALAT_TEMP(:),BLAT(:)
 C - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	write(*,*) '>> gdswiz04: iopt=',iopt
       IF(KGDS(1).EQ.004) THEN
         IM=KGDS(2)
         JM=KGDS(3)
